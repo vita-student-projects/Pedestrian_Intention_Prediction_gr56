@@ -44,6 +44,8 @@ MANIFEST
 *.manifest
 *.spec
 
+#test file
+test.ipynb
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
