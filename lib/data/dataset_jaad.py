@@ -6,21 +6,28 @@ from lib.utils.tools import read_pkl
 class JAADDataset(Dataset):
     def __init__(self,data_path):
         dataset = read_pkl(data_path)
-        self.motions = []
+        self.bboxs = []
         self.labels = []
         for vid in dataset.keys():
             for ped in dataset[vid]['ped_annotations'].keys():
-                bbox = dataset[vid]['ped_annotations'][ped]['bbox']
-                occ = dataset[vid]['ped_annotations'][ped]['occlusion']
-                motion = np.concatenate((bbox,occ),axis=-1)
-                self.motions.append(motion)
-                self.labels.append(dataset[vid]['ped_annotations'][ped]['behavior']['cross'])
-        self.motions = np.array(self.motions)
+                for sample in dataset[vid]['ped_annotations'][ped]:
+                    bbox = sample['bbox']
+                    label = sample['cross']
+
+                    if bbox.shape != (60,4):##temporarily
+                        continue
+                    if type(label) != np.int64:#temporarily
+                        continue
+                    
+                    self.bboxs.append(bbox.astype(np.float32))
+                    self.labels.append(label)
+
+        self.bboxs = np.array(self.bboxs)
         self.labels = np.array(self.labels)
 
     def __len__(self):
-        return len(self.motions)
+        return len(self.bboxs)
     
     def __getitem__(self, idx):
-        motion, label = self.motions[idx], self.labels[idx]
+        motion, label = self.bboxs[idx], self.labels[idx]
         return motion, label
