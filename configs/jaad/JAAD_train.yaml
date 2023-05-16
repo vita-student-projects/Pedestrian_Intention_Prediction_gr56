@@ -19,12 +19,13 @@ depth: 5
 dim_rep: 512
 num_heads: 8
 att_fuse: True
-num_joints: 4
+num_joints: 2
+num_dim : 2
 hidden_dim: 2048
 dropout_ratio: 0.5
 
 # Data
-data_path: data/jaad/jaad_database.pkl #modify it to data_path complete
+data_path: data/jaad/jaad_database.pkl
 data_split: xsub
 clip_len: 60
 action_classes: 1

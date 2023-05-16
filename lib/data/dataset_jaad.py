@@ -5,21 +5,19 @@ from lib.utils.tools import read_pkl
 
 class JAADDataset(Dataset):
     def __init__(self,data_path):
-        dataset = read_pkl(data_path)
+        dataset = read_pkl("data/jaad/jaad_database.pkl")
         self.bboxs = []
         self.labels = []
         for vid in dataset.keys():
             for ped in dataset[vid]['ped_annotations'].keys():
                 for sample in dataset[vid]['ped_annotations'][ped]:
-                    bbox = sample['bbox']
-                    label = sample['cross']
-
-                    if bbox.shape != (60,4):##temporarily
-                        continue
-                    if type(label) != np.int64:#temporarily
-                        continue
+                    coords = []
+                    for bbox in sample['bbox']:
+                        coord = [bbox[0:2],bbox[2:4]]
+                        coords.append(coord)
                     
-                    self.bboxs.append(bbox.astype(np.float32))
+                    label = sample['cross']
+                    self.bboxs.append([np.asarray(coords).astype(np.float32)])
                     self.labels.append(label)
 
         self.bboxs = np.array(self.bboxs)
