@@ -1,9 +1,9 @@
 # General  
-finetune: True
+finetune: False
 partial_train: null
 
 # Traning 
-epochs: 5
+epochs: 500
 batch_size: 4
 lr_backbone: 0.0001
 lr_head: 0.001
