@@ -89,6 +89,51 @@ def train(args,opts):
     
     print('Finished training')
 
+def validate(test_loader, model, criterion, freq):
+    '''
+    Function used to evaluate the model on the test set
+    Input : test_loader, model, criterion
+    Output : avg(losse), top1, top5
+    '''
+    model.eval() #put the model in eval mode
+
+    #metric we keep track off
+    batch_time = AverageMeter()
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
+
+    with torch.no_grad():
+        end = time.time()
+        for idx, (batch_input, batch_gt) in tqdm(enumerate(test_loader)):
+            batch_size = len(batch_input)
+            if torch.cuda.is_available():
+                batch_gt = batch_gt.cuda()
+                batch_input = batch_input.cuda()
+            output = model(batch_input)
+            loss = criterion(output, batch_gt)
+        
+            #update the metrics
+            losses.update(loss.item(), batch_size)
+            acc1, acc5 = accuracy(output, batch_gt, topk=(1,5))
+            top1.update(acc1[0], batch_size)
+            top5.update(acc5[0], batch_size)
+
+            #measure the time since the time for the begining of the training on the batch
+            batch_time.update(time.time()-end)
+            end = time.time()
+
+            if (idx+1) % freq == 0:
+                print('Test: [{0}/{1}]\t'
+                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                      'Acc@5 {top5.val:.3f} ({top5.avg:.3f})\t'.format(
+                       idx, len(test_loader), batch_time=batch_time,
+                       loss=losses, top1=top1, top5=top5))
+                
+    return losses.avg, top1.avg, top5.avg
+
 
 if __name__ == '__main__':
     opts = parse_args()
