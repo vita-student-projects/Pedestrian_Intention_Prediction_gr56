@@ -72,22 +72,45 @@ def train(args,opts):
 
     for epoch in range(args.epochs):
         print('Epoch {}/{}'.format(epoch, args.epochs))
-        model.train()
+        losses_train = AverageMeter()
+        top1 = AverageMeter()
+        top5 = AverageMeter()
+        batch_time = AverageMeter()
+        data_time = AverageMeter()
+        model.train() #put the model in training mode
+
+        end = time.time()
         for idx, (batch, label) in tqdm(enumerate(train_loader)):
+            data_time.update(time.time()-end)
+            batch_size = len(batch)
             if torch.cuda.is_available():
                 batch = batch.cuda()
                 label = label.cuda()
+
             optimizer.zero_grad()
             output = model(batch)
             loss = criterion(output, label)
             loss.backward()
             optimizer.step()
-            if idx % opts.freq == 0:
-                print('Epoch {}, batch {}, loss {}'.format(epoch, idx, loss.item()))
+            
+            batch_time.update(time.time()-end)
+            end = time.time()
+            if idx+1 % opts.freq == 0:
+                print('Train: [epoch: {0}][batch: {1}/{2}]\t'
+                      'BT {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                      'DT {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                      'loss {loss.val:.3f} ({loss.avg:.3f})\t'
+                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                       epoch, idx + 1, len(train_loader), batch_time=batch_time,
+                       data_time=data_time, loss=losses_train, top1=top1))
+                sys.stdout.flush() #print directly
     
         scheduler.step()
     
     print('Finished training')
+
+    #save the model
+    torch.save(model.state_dict(), 'trained_model/jaad_model.ckpt')
 
 def validate(test_loader, model, criterion, freq):
     '''
@@ -105,17 +128,17 @@ def validate(test_loader, model, criterion, freq):
 
     with torch.no_grad():
         end = time.time()
-        for idx, (batch_input, batch_gt) in tqdm(enumerate(test_loader)):
-            batch_size = len(batch_input)
+        for idx, (batch, batch) in tqdm(enumerate(test_loader)):
+            batch_size = len(batch)
             if torch.cuda.is_available():
-                batch_gt = batch_gt.cuda()
-                batch_input = batch_input.cuda()
-            output = model(batch_input)
-            loss = criterion(output, batch_gt)
+                label = label.cuda()
+                batch = batch.cuda()
+            output = model(batch)
+            loss = criterion(output, label)
         
             #update the metrics
             losses.update(loss.item(), batch_size)
-            acc1, acc5 = accuracy(output, batch_gt, topk=(1,5))
+            acc1, acc5 = accuracy(output, label, topk=(1,5))
             top1.update(acc1[0], batch_size)
             top5.update(acc5[0], batch_size)
 
