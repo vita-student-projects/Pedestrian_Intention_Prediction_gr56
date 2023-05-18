@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from functools import partial
 from lib.model.DSTformer import DSTformer
 
@@ -22,22 +23,16 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
         
-def accuracy(output, target, topk=(1,)):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
+def accuracy(output, target):
+    """Computes the accuracy over the predictions"""
     with torch.no_grad():
-        maxk = max(topk)
-        batch_size = target.size(0)
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
-        res = []
-        for k in topk:
-            correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
-            res.append(correct_k.mul_(100.0 / batch_size))
-        return res
+        pred = F.softmax(output, dim=1)
+        equality = (target == pred.argmax(dim=1))
+        accuracy = equality.type_as(torch.FloatTensor()).mean()
+    return accuracy
 
 def load_pretrained_weights(model, checkpoint):
-    """Load pretrianed weights to model
+    """Load pretrained weights to model
     Incompatible layers (unmatched in name or size) will be ignored
     Args:
     - model (nn.Module): network model, which must not be nn.DataParallel

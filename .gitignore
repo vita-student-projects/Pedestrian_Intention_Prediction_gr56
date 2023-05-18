@@ -8,6 +8,7 @@ data
 !lib/data
 .DS_Store
 checkpoint*
+trained_model/
 arun_log
 doodle
 logs
