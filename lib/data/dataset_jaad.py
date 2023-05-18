@@ -4,11 +4,17 @@ from lib.utils.utils_data import crop_scale, resample
 from lib.utils.tools import read_pkl
 
 class JAADDataset(Dataset):
-    def __init__(self,data_path):
+    def __init__(self,data_path,is_train = True):
         dataset = read_pkl(data_path)
         self.bboxs = []
         self.labels = []
+        i = 0
         for vid in dataset.keys():
+            i+=1
+            if is_train and (i > 253):
+                break
+            elif not is_train and (i <= 253):
+                continue
             h = dataset[vid]['height']
             w = dataset[vid]['width']
             for ped in dataset[vid]['ped_annotations'].keys():

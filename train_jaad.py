@@ -51,14 +51,25 @@ def train(args,opts):
     trainloader_params = {
         'batch_size': args.batch_size,
         'shuffle': True,
-        'num_workers': 8,
+        'num_workers': 4,
         'pin_memory': True,
         'prefetch_factor': 4,
         'persistent_workers': True
     }
 
-    jaad = JAADDataset(data_path=args.data_path)
-    train_loader = DataLoader(jaad, **trainloader_params)
+    testloader_params = {
+          'batch_size': args.batch_size,
+          'shuffle': False,
+          'num_workers': 4,
+          'pin_memory': True,
+          'prefetch_factor': 4,
+          'persistent_workers': True
+    }
+
+    jaad_tr = JAADDataset(data_path=args.data_path,is_train=True)
+    jaad_ts = JAADDataset(data_path=args.data_path,is_train=False)
+    train_loader = DataLoader(jaad_tr, **trainloader_params)
+    test_loader = DataLoader(jaad_ts, **testloader_params)
 
     optimizer = optim.AdamW(
             [     {"params": filter(lambda p: p.requires_grad, model.backbone.parameters()), "lr": args.lr_backbone},
@@ -74,7 +85,6 @@ def train(args,opts):
         print('Epoch {}/{}'.format(epoch, args.epochs))
         losses_train = AverageMeter()
         top1 = AverageMeter()
-        top5 = AverageMeter()
         batch_time = AverageMeter()
         data_time = AverageMeter()
         model.train() #put the model in training mode
@@ -93,24 +103,40 @@ def train(args,opts):
             loss.backward()
             optimizer.step()
             
+            losses_train.update(loss.item(), batch_size)
+            acc1 = accuracy(output, label, topk=(1,))
+            top1.update(acc1[0], batch_size)
+            batch_time.update(time.time()-end)
             batch_time.update(time.time()-end)
             end = time.time()
-            if idx+1 % opts.freq == 0:
+            if (idx+1) % opts.freq == 0:
                 print('Train: [epoch: {0}][batch: {1}/{2}]\t'
-                      'BT {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'DT {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                      'loss {loss.val:.3f} ({loss.avg:.3f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                      'BT {batch_time.val} ({batch_time.avg})\t'
+                      'DT {data_time.val} ({data_time.avg})\t'
+                      'loss {loss.val} ({loss.avg})\t'
+                      'Acc@1 {top1.val} ({top1.avg})'.format(
                        epoch, idx + 1, len(train_loader), batch_time=batch_time,
                        data_time=data_time, loss=losses_train, top1=top1))
                 sys.stdout.flush() #print directly
-    
+
+                validate(test_loader, model, criterion)
+
         scheduler.step()
+
+        chk_path = os.path.join(args.checkpoint, 'latest_epoch.bin')
+        print('Saving checkpoint to', chk_path)
+        torch.save({
+            'epoch': epoch+1,
+            'lr': scheduler.get_last_lr(),
+            'optimizer': optimizer.state_dict(),
+            'model': model.state_dict(),
+        }, chk_path)
     
     print('Finished training')
 
     #save the model
-    torch.save(model.state_dict(), 'trained_model/jaad_model.ckpt')
+    model_path = os.path.join(args.checkpoint, 'jaad_model.ckpt')
+    torch.save(model.state_dict(), model_path)
 
 def validate(test_loader, model, criterion, freq):
     '''
@@ -124,7 +150,6 @@ def validate(test_loader, model, criterion, freq):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
-    top5 = AverageMeter()
 
     with torch.no_grad():
         end = time.time()
@@ -138,9 +163,9 @@ def validate(test_loader, model, criterion, freq):
         
             #update the metrics
             losses.update(loss.item(), batch_size)
-            acc1, acc5 = accuracy(output, label, topk=(1,5))
+            acc1 = accuracy(output, label, topk=(1,))
             top1.update(acc1[0], batch_size)
-            top5.update(acc5[0], batch_size)
+            
 
             #measure the time since the time for the begining of the training on the batch
             batch_time.update(time.time()-end)
@@ -148,14 +173,13 @@ def validate(test_loader, model, criterion, freq):
 
             if (idx+1) % freq == 0:
                 print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                      'Acc@5 {top5.val:.3f} ({top5.avg:.3f})\t'.format(
+                      'Time {batch_time.val} ({batch_time.avg})\t'
+                      'Loss {loss.val} ({loss.avg})\t'
+                      'Acc@1 {top1.val} ({top1.avg})\t'.format(
                        idx, len(test_loader), batch_time=batch_time,
-                       loss=losses, top1=top1, top5=top5))
+                       loss=losses, top1=top1))
                 
-    return losses.avg, top1.avg, top5.avg
+    return losses.avg, top1.avg
 
 
 if __name__ == '__main__':
