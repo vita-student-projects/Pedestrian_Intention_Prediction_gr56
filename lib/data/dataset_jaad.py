@@ -1,24 +1,19 @@
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
-from lib.utils.utils_data import crop_scale, resample
+from torch.utils.data import Dataset
 from lib.utils.tools import read_pkl
 
 class JAADDataset(Dataset):
     def __init__(self,data_path,is_train = True):
         dataset = read_pkl(data_path)
+        split = dataset['split']['train_ID' if is_train else 'test_ID']
+        annotations = dataset['annotations']
         self.bboxs = []
         self.labels = []
-        i = 0
-        for vid in dataset.keys():
-            i+=1
-            if is_train and (i > 253):
-                break
-            elif not is_train and (i <= 253):
-                continue
-            h = dataset[vid]['height']
-            w = dataset[vid]['width']
-            for ped in dataset[vid]['ped_annotations'].keys():
-                for sample in dataset[vid]['ped_annotations'][ped]:
+        for vid in split:
+            h = annotations[vid]['height']
+            w = annotations[vid]['width']
+            for ped in annotations[vid]['ped_annotations'].keys():
+                for sample in annotations[vid]['ped_annotations'][ped]:
                     coords = []
                     for bbox in sample['bbox']:
                         coord = [bbox[0:2],bbox[2:4]]

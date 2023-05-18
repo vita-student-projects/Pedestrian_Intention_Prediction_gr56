@@ -119,7 +119,7 @@ def train(args,opts):
                        data_time=data_time, loss=losses_train, top1=top1))
                 sys.stdout.flush() #print directly
 
-                validate(test_loader, model, criterion)
+                #validate(test_loader, model, criterion,freq=10)
 
         scheduler.step()
 
