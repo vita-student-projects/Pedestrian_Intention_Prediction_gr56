@@ -25,9 +25,9 @@ class JAADDataset(Dataset):
                     self.labels.append(label)
 
         self.bboxs = np.array(self.bboxs)
-        #self.bboxs = self.bboxs[0:2] #test overfitting
+        #self.bboxs = self.bboxs[0:10] #test overfitting
         self.labels = np.array(self.labels)
-        #self.labels = self.labels[0:2] #test overfitting
+        #self.labels = self.labels[0:10] #test overfitting
 
     def __len__(self):
         return len(self.bboxs)
