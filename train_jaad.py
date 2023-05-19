@@ -46,19 +46,22 @@ def train(args,opts):
         if e.errno != errno.EEXIST:
             raise RuntimeError('Unable to create checkpoint directory: checkpoints')
 
-    #clear the logs directory if it exists and create it
-    try:
-        shutil.rmtree(args.logs_path)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise RuntimeError("Unable to delete {0} because of {1}.".format(e.filename, e.strerror))
+    #clear the logs directory if we are not resuming from a checkpoint
+    if not opts.checkpoint:
+        try:
+            shutil.rmtree(args.logs_path)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise RuntimeError("Unable to delete {0} because of {1}.".format(e.filename, e.strerror))
+    
+    #create the logs directory if it does not exist
     try:
         os.makedirs(args.logs_path)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise RuntimeError('Unable to create logs directory: {}'.format(args.logs_path))
 
-    train_writer = tensorboardX.SummaryWriter(os.path.join(args.logs_path, "logs_train"))
+    train_writer = tensorboardX.SummaryWriter(args.logs_path)
 
     print('INFO: Creating model')
     m_backbone = load_backbone(args)
@@ -119,7 +122,7 @@ def train(args,opts):
 
     print('INFO: Starting training ...')
     for epoch in range(st,args.epochs):
-        print('INFO: Epoch {}/{}'.format(epoch, args.epochs))
+        print('INFO: Epoch {}/{}'.format(epoch+1, args.epochs))
         losses_train = AverageMeter()
         acc = AverageMeter()
         batch_time = AverageMeter()
@@ -150,7 +153,7 @@ def train(args,opts):
                       'Accuracy: {acc.val:.3f} ({acc.avg:.3f})'.format(idx+1, len(train_loader), batch_time=batch_time, loss=losses_train, acc=acc))
                 sys.stdout.flush() #print directly
         
-        print('INFO: Starting testing for Epoch {}/{}'.format(epoch, args.epochs))
+        print('INFO: Starting testing for Epoch {}/{}'.format(epoch+1, args.epochs))
         test_loss, test_acc = validate(test_loader, model, criterion)
         print('INFO: Testing done')
         print('Loss: {loss:.4f} Accuracy: {acc:.3f}'.format(loss=test_loss, acc=test_acc))
@@ -170,8 +173,13 @@ def train(args,opts):
         }, args.chk_path)
 
     print('INFO: Finished training')
-    batch = next(iter(train_loader))[0]
-    train_writer.add_graph(model, batch)
+
+    #evaluate the model structure if we are not resuming from a checkpoint
+    if not opts.checkpoint:
+        print('INFO: Evaluating model structure')
+        batch = next(iter(train_loader))[0]
+        train_writer.add_graph(model, batch)
+        print('INFO: Evaluation done')
 
 def validate(test_loader, model, criterion):
     '''
