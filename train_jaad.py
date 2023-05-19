@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 import time
 import sys
@@ -7,6 +8,7 @@ import argparse
 from tqdm import tqdm
 import random
 import pprint as pp # pretty print
+import tensorboardX
 
 import torch
 import torch.nn as nn
@@ -43,6 +45,20 @@ def train(args,opts):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise RuntimeError('Unable to create checkpoint directory: checkpoints')
+
+    #clear the logs directory if it exists and create it
+    try:
+        shutil.rmtree(args.logs_path)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise RuntimeError("Unable to delete {0} because of {1}.".format(e.filename, e.strerror))
+    try:
+        os.makedirs(args.logs_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise RuntimeError('Unable to create logs directory: {}'.format(args.logs_path))
+
+    train_writer = tensorboardX.SummaryWriter(os.path.join(args.logs_path, "logs_train"))
 
     print('INFO: Creating model')
     m_backbone = load_backbone(args)
@@ -135,10 +151,15 @@ def train(args,opts):
                 sys.stdout.flush() #print directly
         
         print('INFO: Starting testing for Epoch {}/{}'.format(epoch, args.epochs))
-        test_loss, acc = validate(test_loader, model, criterion)
+        test_loss, test_acc = validate(test_loader, model, criterion)
         print('INFO: Testing done')
-        print('Loss: {loss:.4f} Accuracy: {acc:.3f}'.format(loss=test_loss, acc=acc))
+        print('Loss: {loss:.4f} Accuracy: {acc:.3f}'.format(loss=test_loss, acc=test_acc))
         scheduler.step()
+        
+        train_writer.add_scalar('train_loss', losses_train.avg, epoch + 1)
+        train_writer.add_scalar('train_acc', acc.avg, epoch + 1)
+        train_writer.add_scalar('test_loss', test_loss, epoch + 1)
+        train_writer.add_scalar('test_acc', test_acc, epoch + 1)
         
 
         print('INFO: Saving checkpoint to', args.chk_path)
@@ -149,6 +170,8 @@ def train(args,opts):
         }, args.chk_path)
 
     print('INFO: Finished training')
+    batch = next(iter(train_loader))[0]
+    train_writer.add_graph(model, batch)
 
 def validate(test_loader, model, criterion):
     '''
@@ -160,7 +183,7 @@ def validate(test_loader, model, criterion):
 
     #metric we keep track off
     losses = AverageMeter()
-    acc = AverageMeter()
+    accu = AverageMeter()
 
     with torch.no_grad():
         for idx, (batch, label) in tqdm(enumerate(test_loader)):
@@ -173,9 +196,9 @@ def validate(test_loader, model, criterion):
 
             #update the metrics
             losses.update(loss.item(), batch_size)
-            acc.update(accuracy(output, label), batch_size)
+            accu.update(accuracy(output, label), batch_size)
                 
-    return losses.avg, acc.avg
+    return losses.avg, accu.avg
 
 def evaluate(args):
     print('INFO: Evaluating model')
