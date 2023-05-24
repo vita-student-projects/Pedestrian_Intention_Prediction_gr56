@@ -1,6 +1,6 @@
 import numpy as np
 import os, sys
-import pickle
+import pickle5 as pickle
 import yaml
 from easydict import EasyDict as edict
 from typing import Any, IO

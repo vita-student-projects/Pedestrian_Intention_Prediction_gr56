@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 
 from lib.utils.tools import *
 from lib.utils.learning import *
-from lib.data.dataset_jaad import JAADDataset
+from lib.data.dataset_jaad import KPJAADDataset
 from lib.model.model_action import ActionNet
 
 random.seed(0)
@@ -93,8 +93,8 @@ def train(args,opts):
     }
 
     print('INFO: Loading data')
-    jaad_tr = JAADDataset(data_path=args.data_path,is_train=True)
-    jaad_ts = JAADDataset(data_path=args.data_path,is_train=False)
+    jaad_tr = KPJAADDataset(data_path=args.data_path,is_train=True)
+    jaad_ts = KPJAADDataset(data_path=args.data_path,is_train=False)
     train_loader = DataLoader(jaad_tr, **trainloader_params)
     test_loader = DataLoader(jaad_ts, **testloader_params)
 
@@ -228,7 +228,7 @@ def evaluate(args):
           'drop_last': False
     }
 
-    jaad_ts = JAADDataset(data_path=args.data_path,is_train=False)
+    jaad_ts = KPJAADDataset(data_path=args.data_path,is_train=False)
     test_loader = DataLoader(jaad_ts, **testloader_params)
     model.load_state_dict(torch.load(args.chk_path, map_location=lambda storage, loc: storage)['model'], strict=True)
 

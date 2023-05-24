@@ -48,3 +48,33 @@ def make_cam(x, img_shape):
     else:
         x_cam = x / h * 2 - 1
     return x_cam
+
+class KPJAADDataset(Dataset):
+    def __init__(self,data_path,is_train = True):
+        dataset = read_pkl(data_path)
+        split = dataset['split']['train_ID' if is_train else 'test_ID']
+        annotations = dataset['annotations']
+        self.motions = []
+        self.labels = []
+        for vid in split:
+            h = annotations[vid]['height']
+            w = annotations[vid]['width']
+            for ped in annotations[vid]['ped_annotations'].keys():
+                for sample in annotations[vid]['ped_annotations'][ped]:
+                    coords = sample['2dkp']
+                    coords = make_cam(np.asarray(coords),(h,w))
+                    self.motions.append([coords.astype(np.float32)]) #here in a list of 1d to keep the M size for the network
+                    label = sample['cross']
+                    self.labels.append(label)
+
+        self.motions = np.array(self.motions)
+        #self.motions = self.motions[0:2] #test overfitting
+        self.labels = np.array(self.labels)
+        #self.labels = self.labels[0:2] #test overfitting
+
+    def __len__(self):
+        return len(self.motions)
+    
+    def __getitem__(self, idx):
+        motion, label = self.motions[idx], self.labels[idx]
+        return motion, label
