@@ -1,19 +1,20 @@
 # Traning 
 epochs: 10
-batch_size: 8
+batch_size: 2
 lr_backbone: 0.0001
 lr_head: 0.001
 weight_decay: 0.01
 lr_decay: 0.99
 
 # Model
-maxlen: 60
+maxlen: 30
 mlp_ratio: 2
 depth: 5
 num_heads: 8
 att_fuse: True
-num_joints: 17
-dim_bbox : 3
+num_joints: 19
+dim_in : 3
+dim_out : 3
 dim_feat: 512
 dim_rep: 512
 hidden_dim: 2048
@@ -23,6 +24,6 @@ dropout_ratio: 0.5
 data_path: data/jaad_dataset.pkl
 chk_path: checkpoints/latest_epoch.bin
 logs_path: logs/
-clip_len: 60
+clip_len: 30
 action_classes: 2 #0 : not crossing
                   #1 : crossing

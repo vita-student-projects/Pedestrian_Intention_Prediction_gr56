@@ -43,10 +43,12 @@ def make_cam(x, img_shape):
                img_shape (height, width)
     '''
     h, w = img_shape
+    x_conf = x[:,:,2]
     if w >= h:
         x_cam = x / w * 2 - 1
     else:
         x_cam = x / h * 2 - 1
+    x_cam[:,:,2] = x_conf
     return x_cam
 
 class KPJAADDataset(Dataset):
@@ -61,16 +63,21 @@ class KPJAADDataset(Dataset):
             w = annotations[vid]['width']
             for ped in annotations[vid]['ped_annotations'].keys():
                 for sample in annotations[vid]['ped_annotations'][ped]:
-                    coords = sample['2dkp']
+                    bboxs=[]
+                    for bb, occlu in zip(sample['bbox'], sample['occlusion']):
+                        bbox = [np.append(bb[0:2],occlu),np.append(bb[2:4],occlu)]
+                        bboxs.append(bbox)
+                    bboxs = np.asarray(bboxs)
+                    coords = np.concatenate((sample['2dkp'],bboxs),axis=1)
                     coords = make_cam(np.asarray(coords),(h,w))
                     self.motions.append([coords.astype(np.float32)]) #here in a list of 1d to keep the M size for the network
                     label = sample['cross']
                     self.labels.append(label)
 
         self.motions = np.array(self.motions)
-        #self.motions = self.motions[0:2] #test overfitting
+        self.motions = self.motions[0:2] #test overfitting
         self.labels = np.array(self.labels)
-        #self.labels = self.labels[0:2] #test overfitting
+        self.labels = self.labels[0:2] #test overfitting
 
     def __len__(self):
         return len(self.motions)

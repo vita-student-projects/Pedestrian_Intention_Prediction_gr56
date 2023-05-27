@@ -27,7 +27,7 @@ class ActionHeadClassification(nn.Module):
         return feat
 
 class ActionNet(nn.Module):
-    def __init__(self, backbone, dim_rep=512, num_classes=2, dropout_ratio=0., hidden_dim=2048, num_joints=2):
+    def __init__(self, backbone, dim_rep=512, num_classes=2, dropout_ratio=0., hidden_dim=2048, num_joints=19):
         super(ActionNet, self).__init__()
         self.backbone = backbone
         self.feat_J = num_joints
