@@ -1,6 +1,6 @@
 # Traning 
-epochs: 10
-batch_size: 2
+epochs: 50
+batch_size: 8
 lr_backbone: 0.0001
 lr_head: 0.001
 weight_decay: 0.01

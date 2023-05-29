@@ -75,9 +75,9 @@ class KPJAADDataset(Dataset):
                     self.labels.append(label)
 
         self.motions = np.array(self.motions)
-        self.motions = self.motions[0:2] #test overfitting
+        #self.motions = self.motions[0:2] #test overfitting
         self.labels = np.array(self.labels)
-        self.labels = self.labels[0:2] #test overfitting
+        #self.labels = self.labels[0:2] #test overfitting
 
     def __len__(self):
         return len(self.motions)

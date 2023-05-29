@@ -174,8 +174,8 @@ def train(args,opts):
 
     print('INFO: Finished training')
 
-    #evaluate the model structure if we are not resuming from a checkpoint
-    if not opts.checkpoint:
+    #evaluate the model structure if we are not resuming from a checkpoint or using a GPU
+    if not opts.checkpoint and not torch.cuda.is_available():
         print('INFO: Evaluating model structure')
         batch = next(iter(train_loader))[0]
         train_writer.add_graph(model, batch)
