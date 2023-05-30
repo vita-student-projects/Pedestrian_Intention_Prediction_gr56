@@ -295,7 +295,7 @@ class JAAD(object):
 
 
 
-    def _get_annotations(self, vid, compute_kps, processor = None):
+    def _get_annotations(self, vid, compute_kps, processor):
         """
         Generates a dictinary of annotations by parsing the video XML file 
         and generating 2d keypoints for the all pedestrians in the whole 
@@ -436,9 +436,9 @@ class JAAD(object):
 
             print('\nGetting annotations for %s' % vid)
             dataset['ckpt'] = vid
-
+            
             processor = processor if compute_kps else None
-            vid_annotations, nbr_seq = self._get_annotations(vid, processor, compute_kps)
+            vid_annotations, nbr_seq = self._get_annotations(vid, compute_kps, processor)
 
             if (nbr_seq != 0):
                 dataset['annotations'][vid] = vid_annotations
