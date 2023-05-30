@@ -110,17 +110,17 @@ def infer(args):
 
         #add the predictions and the bboxs to the frame dictionary
         for ped in ped_pred.keys():
-            frame_dict['predictions'].append({'pred' : ped_pred[ped][0],'confidence': ped_pred[ped][1], 'bounding_box' : ped_bbox[ped]})
+            frame_dict['predictions'].append({'pred' : ped_pred[ped][0],'confidence': ped_pred[ped][1], 'bbox' : ped_bbox[ped]})
         output.append(frame_dict)
 
     inference = {'project' : 'Pedestrian Intention Prediction',
                  'output' : output}
 
     #save the prediction in a json file
-    with open('inference.json', 'w') as fp:
+    with open(args.fname, 'w') as fp:
         json.dump(inference, fp)
     
-    print('INFO: Prediction saved in data/prediction.json')
+    print('INFO: Prediction saved in {}'.format(args.fname))
         
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ import argparse
 from tqdm import tqdm
 import pprint as pp # pretty print
 import tensorboardX
+from sklearn.metrics import f1_score
 
 import torch
 import torch.nn as nn
@@ -19,6 +20,7 @@ from lib.utils.tools import *
 from lib.utils.learning import *
 from lib.data.dataset_jaad import KPJAADDataset
 from lib.model.model_action import ActionNet
+    
 
 def parse_args():
     '''
@@ -139,7 +141,8 @@ def train(args,opts):
         losses_train = AverageMeter()
         acc = AverageMeter()
         batch_time = AverageMeter()
-        
+        f1 = AverageMeter()
+
         #put the model in training mode
         model.train() 
 
@@ -165,6 +168,9 @@ def train(args,opts):
             losses_train.update(loss.item(), batch_size)
             acc.update(accuracy(output, label), batch_size)
             batch_time.update(time.time()-end)
+            f1.update(f1_score(label.cpu().numpy(), output.argmax(dim=1).cpu().numpy(), average='macro'), batch_size) #macro mode computes the metric independently for 
+                                                                                                                      #each class and then takes the average 
+                                                                                                                      #(hence treating all classes equally, even if some are unbalanced)
             end = time.time()
 
             #print the metrics every opts.freq batches
@@ -173,11 +179,13 @@ def train(args,opts):
                 print('INFO: Batch:[{0}/{1}] '
                       'Batch time: {batch_time.val:.3f} ({batch_time.avg:.3f}) '
                       'Loss: {loss.val:.3f} ({loss.avg:.3}) '
-                      'Accuracy: {acc.val:.3f} ({acc.avg:.3f})'.format(idx+1, len(train_loader), batch_time=batch_time, loss=losses_train, acc=acc))
+                      'Accuracy: {acc.val:.3f} ({acc.avg:.3f})'
+                      'F1: {f1.val:.3f} ({f1.avg:.3f})'.format(idx+1, len(train_loader), batch_time=batch_time, loss=losses_train, acc=acc, f1=f1))
+                      
                 sys.stdout.flush() #print directly
         
         print('INFO: Starting testing for Epoch {}/{}'.format(epoch+1, args.epochs))
-        test_loss, test_acc = validate(test_loader, model, criterion) #evaluate the model on the test set
+        test_loss, test_acc, test_f1 = validate(test_loader, model, criterion) #evaluate the model on the test set
         print('INFO: Testing done')
         print('Loss: {loss:.4f} Accuracy: {acc:.3f}'.format(loss=test_loss, acc=test_acc))
         scheduler.step()
@@ -185,8 +193,10 @@ def train(args,opts):
         #write the metrics to tensorboard for visualization
         train_writer.add_scalar('train_loss', losses_train.avg, epoch + 1)
         train_writer.add_scalar('train_acc', acc.avg, epoch + 1)
+        train_writer.add_scalar('train_f1', f1.avg, epoch + 1)
         train_writer.add_scalar('test_loss', test_loss, epoch + 1)
         train_writer.add_scalar('test_acc', test_acc, epoch + 1)
+        train_writer.add_scalar('test_f1', test_f1, epoch + 1)
         
         #saving the model checkpoint
         print('INFO: Saving checkpoint to', args.chk_path)
@@ -225,6 +235,7 @@ def validate(test_loader, model, criterion):
     #metric we keep track off
     losses = AverageMeter()
     accu = AverageMeter()
+    f1 = AverageMeter()
 
     #disable gradient computation
     with torch.no_grad():
@@ -243,8 +254,9 @@ def validate(test_loader, model, criterion):
             #update the metrics
             losses.update(loss.item(), batch_size)
             accu.update(accuracy(output, label), batch_size)
-                
-    return losses.avg, accu.avg
+            f1.update(f1_score(label.cpu().numpy(), output.argmax(dim=1).cpu().numpy(), average='macro'), batch_size) 
+
+    return losses.avg, accu.avg, f1
 
 def evaluate(args):
     '''

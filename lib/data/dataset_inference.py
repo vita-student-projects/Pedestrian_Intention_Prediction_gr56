@@ -57,7 +57,7 @@ class KPInfDataset(Dataset):
 
                 #normalize the coordinates of the keypoints and bboxs
                 coords = make_cam(np.asarray(coords),(h,w))
-                self.motions.append([coords[:30].astype(np.float32)]) #here in a list of 1d to keep the M size for the network    
+                self.motions.append([coords.astype(np.float32)]) #here in a list of 1d to keep the M size for the network    
             self.pedFrames.append(ped_frames)#add the list of list of frames for this ped
         self.motions = np.array(self.motions)
 

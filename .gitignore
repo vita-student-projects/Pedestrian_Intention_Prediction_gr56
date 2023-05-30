@@ -145,4 +145,4 @@ dmypy.json
 tempCodeRunnerFile.py
 
 #inference
-inference.json
+*.json

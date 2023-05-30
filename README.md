@@ -65,7 +65,7 @@ python tain.py --config config/<your_config_file>.yaml -f <print_frequency> -e
 In this part we will explain how to use the model to predict the intention of pedestrians on a video.
 
 1. Follow the procedure of the part <span style="color:red">Create Dataset for Inference</span> to create the dataset from the video you want to use and put it in the `data` folder.
-2. Create a config file in the `config` folder. You can use the `config/JAAD_inference.yaml` file as a template.
+2. Create a config file in the `config` folder. You can use the `config/inference.yaml` file as a template.
 3. Fill the config file with the correct paths to the dataset and the correct wanted parameters (make sure that it is the same config file as the one used for training the model you want to use).
 4. Run the following command:
 

@@ -124,11 +124,11 @@ class KPJAADDataset(Dataset):
         '''
         Return the number of samples in the dataset, needed for the dataloader
         '''
-        return len(self.bboxs)
+        return len(self.motions)
         
     def __getitem__(self, idx):
         '''
         Return the sample at the index idx, needed for the dataloader
         '''
-        motion, label = self.bboxs[idx], self.labels[idx]
+        motion, label = self.motions[idx], self.labels[idx]
         return motion, label
