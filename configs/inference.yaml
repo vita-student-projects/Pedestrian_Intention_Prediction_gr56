@@ -15,7 +15,7 @@ dropout_ratio: 0.5
 # Data
 data_path: data/Test3view_MB.pkl
 chk_path: checkpoints/best_epoch.bin
-fname: Test3view.json
+fname: datagen/infer_DB/infer_pred/Test3view.json
 clip_len: 30
 action_classes: 2 #0 : not crossing
                   #1 : crossing
