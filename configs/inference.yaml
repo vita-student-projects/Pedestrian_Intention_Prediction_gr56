@@ -14,7 +14,7 @@ dropout_ratio: 0.5
 
 # Data
 data_path: data/Test3view_MB.pkl
-chk_path: checkpoints/latest_epoch.bin
+chk_path: checkpoints/best_epoch.bin
 clip_len: 30
 action_classes: 2 #0 : not crossing
                   #1 : crossing

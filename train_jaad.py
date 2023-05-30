@@ -130,6 +130,7 @@ def train(args,opts):
             else:
                 print('WARNING: this checkpoint does not contain an optimizer state. The optimizer will be reinitialized.')
 
+    best_acc = 0
     print('INFO: Starting training ...')
     for epoch in range(st,args.epochs):
         print('INFO: Epoch {}/{}'.format(epoch+1, args.epochs))
@@ -138,7 +139,7 @@ def train(args,opts):
         losses_train = AverageMeter()
         acc = AverageMeter()
         batch_time = AverageMeter()
-
+        
         #put the model in training mode
         model.train() 
 
@@ -194,6 +195,15 @@ def train(args,opts):
             'optimizer': optimizer.state_dict(),
             'model': model.state_dict(),
         }, args.chk_path)
+
+        #saving the best model checkpoint
+        if test_acc > best_acc:
+            best_acc = test_acc
+            torch.save({
+                'epoch': epoch+1,
+                'optimizer': optimizer.state_dict(),
+                'model': model.state_dict(),
+            }, args.best_chk_path)
 
     print('INFO: Finished training')
 
