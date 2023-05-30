@@ -1,0 +1,20 @@
+# Model
+maxlen: 30
+mlp_ratio: 2
+depth: 5
+num_heads: 8
+att_fuse: True
+num_joints: 19
+dim_in : 3
+dim_out : 3
+dim_feat: 512
+dim_rep: 512
+hidden_dim: 2048
+dropout_ratio: 0.5
+
+# Data
+data_path: data/inf_dataset.pkl
+chk_path: checkpoints/latest_epoch.bin
+clip_len: 30
+action_classes: 2 #0 : not crossing
+                  #1 : crossing
