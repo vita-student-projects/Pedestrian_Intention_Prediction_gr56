@@ -14,8 +14,8 @@ To install the project and be able to run it, you need to follow the following s
 2. Install the requirements:
 
 ```bash
-conda create -n mb_pip python=3.7 anaconda
-conda activate mb_pip
+conda create -n mbpip python=3.7 anaconda
+conda activate mbpip
 # Please install PyTorch according to your CUDA version.
 conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
 pip install -r requirements.txt
