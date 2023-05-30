@@ -21,37 +21,39 @@ class KPInfDataset(Dataset):
     def __init__(self,data_path):
         annotations = read_pkl(data_path)
         self.motions = []
-        self.labels = []
+        self.bb_ped = []
         self.pedsNseq = []
         self.pedFrames = []
-        self.num_frames = annotations['num_frames']
+        self.num_frames = annotations['total_frame_vid']
         h = annotations['height']
         w = annotations['width']
-        for ped in annotations['ped_annotations'].keys():
-            self.pedsNseq.append(len(annotations['ped_annotations'][ped]))
+        for ped in annotations['ped_annotations']:
+            self.pedsNseq.append(len(ped))
             ped_frames = []
-            for sample in annotations['ped_annotations'][ped]:
-                ped_frames.append(sample['frame'])
+            for sample in ped:
+                ped_frames.append(sample['frames'])
                 bboxs=[]
+                bbox_ped = []
                 for bb, occlu in zip(sample['bbox'], sample['occlusion']):
                     bbox = [np.append(bb[0:2],occlu),np.append(bb[2:4],occlu)]
+                    bb_ped = [bb[0:2],bb[2:4]]
                     bboxs.append(bbox)
+                    bbox_ped.append(bb_ped)
                 bboxs = np.asarray(bboxs)
                 coords = np.concatenate((sample['2dkp'],bboxs),axis=1)
                 coords = make_cam(np.asarray(coords),(h,w))
-                self.motions.append([coords.astype(np.float32)]) #here in a list of 1d to keep the M size for the network
-                label = sample['cross']
-                self.labels.append(label)
+                self.motions.append([coords[:30].astype(np.float32)]) #here in a list of 1d to keep the M size for the network
+                self.bb_ped.append(bbox_ped)
+                
             self.pedFrames.append(ped_frames)
-            self.motions = np.array(self.motions)
-        self.labels = np.array(self.labels)
+        self.motions = np.array(self.motions)
+        print(self.motions.shape)
 
     def __len__(self):
         return len(self.motions)
     
     def __getitem__(self, idx):
-        motion, label = self.motions[idx], self.labels[idx]
-        return motion, label
+        return self.motions[idx]
 
     def get_seqs(self):
         return self.pedsNseq
@@ -59,3 +61,5 @@ class KPInfDataset(Dataset):
     def get_frames(self):
         return self.num_frames, self.pedFrames
     
+    def get_bboxs(self):
+        return self.bb_ped

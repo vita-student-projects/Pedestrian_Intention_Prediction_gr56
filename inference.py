@@ -5,6 +5,7 @@ import json
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
 
 from lib.utils.tools import *
 from lib.utils.learning import *
@@ -14,7 +15,6 @@ from lib.model.model_action import ActionNet
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='configs/inference.yaml', help='Path to the config file.')
-    parser.add_argument('-p','--path', default='data/inference.pkl', help='Path to the inference data.')
     opts = parser.parse_args()
     return opts
 
@@ -38,7 +38,7 @@ def infer(args):
           'drop_last': False
     }
 
-    jaad_ts = KPInfDataset(data_path=args.data_path,is_train=False)
+    jaad_ts = KPInfDataset(data_path=args.data_path)
     test_loader = DataLoader(jaad_ts, **testloader_params)
     model.load_state_dict(torch.load(args.chk_path, map_location=lambda storage, loc: storage)['model'], strict=True)
 
@@ -48,45 +48,59 @@ def infer(args):
     preds = []
 
     with torch.no_grad():
-        for idx, (batch, label) in tqdm(enumerate(test_loader)):
+        for idx, batch in tqdm(enumerate(test_loader)):
             if torch.cuda.is_available():
-                label = label.cuda()
                 batch = batch.cuda()
             output = model(batch)
-            pred = output.argmax(dim=1)
+            prob = F.softmax(output, dim=1)
+            p_max, pred = torch.max(prob,dim=1)
 
             #update the metrics
-            preds.append(pred)
+            preds.append([pred,p_max])
     
     print('INFO: Inference done')
     
     #now we need to put the predictions back to the right sequence of the right pedestrian
     #we need to know the number of sequences per pedestrian
     prediction = []
+    bb_order = []
+    bboxs = jaad_ts.get_bboxs()
     seqs = jaad_ts.get_seqs()
     for i in range(len(seqs)):
         seq = seqs[i]
         prediction.append(preds[:seq])
         preds = preds[seq:]
+        bb_order.append(bboxs[:seq])
+        bboxs = bboxs[seq:]
+        
 
     num_frames, pedFrames = jaad_ts.get_frames()
+    
     #now we need to put the predictions back to the right frame of the right pedestrian
     output = []
     for i in range(num_frames):
-        frame_dict = {'frame' : i, 'predictions' : []}
+        frame_dict = {'frame' : i+1, 'predictions' : []}
+        ped_pred = {}
+        ped_bbox = {}
         for j in range(len(pedFrames)):
             for k in range(len(pedFrames[j])):
-                if pedFrames[j][k] == i:
-                    frame_dict['predictions'].append(prediction[j][k].item())
-                else:
-                    frame_dict['predictions'].append(None)
+                if i in pedFrames[j][k]:
+                    ped_pred[j] = [tensor.item() for tensor in prediction[j][k]]
+                    ped_bbox[j] = bb_order[j][k][pedFrames[j][k].index(i)]   
+                elif j not in ped_pred.keys():
+                    ped_pred[j] = [None,None]
+                    ped_bbox[j] = None
+
+        for ped in ped_pred.keys():
+            frame_dict['predictions'].append({'pred' : ped_pred[ped][0],'confidence': ped_pred[ped][1], 'bounding_box' : ped_bbox[ped]})
+
         output.append(frame_dict)
 
     inference = {'project' : 'Pedestrian Intention Prediction',
                  'output' : output}
 
     #save the prediction in a json file
-    with open('data/inference.json', 'w') as fp:
+    with open('inference.json', 'w') as fp:
         json.dump(inference, fp)
     
     print('INFO: Prediction saved in data/prediction.json')
