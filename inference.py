@@ -37,7 +37,7 @@ class Inference(object):
         self._infer_folder_path = join(self._data_path, 'datagen/infer_DB')
         self._infer_clips_path = join(self._infer_folder_path, 'infer_clips')
         self._infer_out_path = join(self._infer_folder_path, 'infer_out')
-        self._infer_pkl_path = join(self._data_path, 'datagen/data/infer_pkl')
+        self._infer_pkl_path = join(self._data_path, 'datagen/data')
         self._infer_pred_path = join(self._infer_folder_path, 'infer_pred')
         
         
@@ -90,7 +90,7 @@ class Inference(object):
     
     def generate_data_OPP(self, filename):
         """
-        Extracts an interference database based
+        Extracts an interference Dataset based
         on the input video
 
         Dictionary structure:
@@ -171,18 +171,18 @@ class Inference(object):
         with open(join(self._infer_pkl_path, filename + "_OPP.pkl"), "wb") as f:
             pickle.dump(data_seq, f, pickle.HIGHEST_PROTOCOL)
         
-        print('Database sucessfully created')
+        print('Dataset sucessfully created')
         print('Path ', self._infer_pkl_path)
 
         return
 
     
 
-    def processing_data_4_MB(self, filename):
+    def processing_data_4_PIP(self, filename):
         """
-        Processes an interference database based on 
+        Processes an interference Dataset based on 
         the structure output by generate_data_OPP, and 
-        outputs a more convenient structure for the MB model
+        outputs a more convenient structure for the PIP model
         :param filename: Name of the file without the extension
 
         Dictionary structure:
@@ -211,13 +211,13 @@ class Inference(object):
         with open(join(self._infer_pkl_path, pkl_file_path), "rb") as f:
                 infer_data = pickle.load(f)
 
-        data_MB = {'vid_id': infer_data['vid_id'],'num_seq': infer_data['num_seq'],'forecast_step': infer_data['forecast_step'],
+        data_PIP = {'vid_id': infer_data['vid_id'],'num_seq': infer_data['num_seq'],'forecast_step': infer_data['forecast_step'],
                 'nbr_frame_seq': infer_data['nbr_frame_seq'], 'total_frame_vid': infer_data['total_frame_vid'], 'width': infer_data['width'], 
                 'height': infer_data['height'], 'per_seq_ped': infer_data['per_seq_ped'], 'ped_annotations': []}
         
         
         max_psp = 0
-        for psp in enumerate(data_MB['per_seq_ped']):
+        for psp in enumerate(data_PIP['per_seq_ped']):
             max_psp = max_psp if max_psp > len(psp) else len(psp)
 
         for ped_id in range(0, max_psp):
@@ -227,8 +227,8 @@ class Inference(object):
                 occlusion_tmp = []
                 bbox_tmp = []
                 kps_tmp = []
-                if not data_MB['per_seq_ped'][seq['seq_id']] is None:
-                    if ped_id in data_MB['per_seq_ped'][seq['seq_id']]:
+                if not data_PIP['per_seq_ped'][seq['seq_id']] is None:
+                    if ped_id in data_PIP['per_seq_ped'][seq['seq_id']]:
                         for frame in seq['frames']:
                             frames_tmp.append(self.nbr_frame_seq*seq['seq_id']+frame['frame_id'])
                             if ped_id < len(frame['peds']):
@@ -246,12 +246,12 @@ class Inference(object):
                             'bbox' : bbox_tmp,
                             '2dkp' : np.array(kps_tmp)}
                     ped_annotations.append(ped_seq)
-            data_MB['ped_annotations'].append(ped_annotations)
+            data_PIP['ped_annotations'].append(ped_annotations)
         
-        with open(join(self._infer_pkl_path, filename + "_MB.pkl"), "wb") as f:
-            pickle.dump(data_MB, f, pickle.HIGHEST_PROTOCOL)
+        with open(join(self._infer_pkl_path, filename + "_PIP.pkl"), "wb") as f:
+            pickle.dump(data_PIP, f, pickle.HIGHEST_PROTOCOL)
 
-        print('Database sucessfully created')
+        print('Dataset sucessfully created')
         print('Path ', self._infer_pkl_path)
 
         return
@@ -262,12 +262,12 @@ class Inference(object):
         """
         Reconstructs the video clip with prediction vizualisation. 
         To this end are used the json prediction file, 
-        the pickle database file, and the video clip.
+        the pickle Dataset file, and the video clip.
         :param filename: Name of the file without the extension
         """
 
         pred_file_path = join(self._infer_pred_path, filename + ".json")
-        pkl_file_path = join(self._infer_pkl_path, filename + "_MB.pkl")
+        pkl_file_path = join(self._infer_pkl_path, filename + "_PIP.pkl")
         clip_file_path = join(self._infer_clips_path, filename + ".mp4")
 
         if not isfile(pred_file_path):
@@ -306,11 +306,9 @@ class Inference(object):
         height = pkl_file['height']
 
         # print(len(pkl_file['ped_annotations']))
-        for idx in range(pkl_file['total_frame_vid']):
-            for ped in pkl_file['ped_annotations']:
-                seq = int(idx/pkl_file['nbr_frame_seq'])
-                
-                print(seq)
+        # for idx in range(pkl_file['total_frame_vid']):
+        #     for ped in pkl_file['ped_annotations']:
+        #         seq = int(idx/pkl_file['nbr_frame_seq'])
 
         vidcap = cv2.VideoCapture(clip_file_path)
         out = cv2.VideoWriter(join(self._infer_out_path, filename+'_out.mp4'),
@@ -349,6 +347,6 @@ if __name__ == "__main__":
     opts = parse_args()
     infer = Inference(data_path=opts.data_path)
 
-    #infer.generate_data_OPP(filename=opts.filename)
-    #infer.processing_data_4_MB(filename=opts.filename)
+    infer.generate_data_OPP(filename=opts.filename)
+    infer.processing_data_4_PIP(filename=opts.filename)
     infer.reconstrust_video(filename=opts.filename)
