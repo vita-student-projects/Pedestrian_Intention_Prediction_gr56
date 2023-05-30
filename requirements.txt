@@ -2,6 +2,7 @@ easydict==1.10
 numpy==1.24.3
 pickle5==0.0.12
 PyYAML==6.0
+scikit_learn==1.2.2
 tensorboardX==2.6
 torch==2.0.0+cpu
 tqdm==4.65.0
