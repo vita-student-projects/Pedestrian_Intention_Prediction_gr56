@@ -114,15 +114,15 @@ class JAAD(object):
         Outputs the statistics of the dataset
         """
         with open(self._checkpoint_path, 'rb') as f:
-              database = pickle.load(f)
+              dataset = pickle.load(f)
 
         tot_seq, tot_C, tot_NC = 0, 0, 0
 
-        for vid in list(database['annotations'].keys()):
+        for vid in list(dataset['annotations'].keys()):
             print('\n-----------------------------------------------')
             print('Video ', vid)
 
-            annotations = database['annotations'][vid]['ped_annotations']
+            annotations = dataset['annotations'][vid]['ped_annotations']
 
             for ped in list(annotations.keys()):
                 tot_seq += len(annotations[ped])
@@ -142,8 +142,8 @@ class JAAD(object):
 
         print('\n----------------------END----------------------')
         print('Total number sequences      ', str(tot_seq))
-        print('Total number train videos   ', str(len(database['split']['train_ID'])))
-        print('Total number test videos    ', str(len(database['split']['test_ID'])))
+        print('Total number train videos   ', str(len(dataset['split']['train_ID'])))
+        print('Total number test videos    ', str(len(dataset['split']['test_ID'])))
         print('Total number C labels    {:5}   {:3}%'.format(str(tot_C), 
                                           str(int(100*tot_C/(tot_C+tot_NC)))))
         print('Total number NC labels   {:5}   {:3}%'.format(str(tot_NC), 
@@ -162,13 +162,13 @@ class JAAD(object):
         """
 
         if not isfile(self._checkpoint_path):
-            print("No database found in " + self._data_path)
+            print("No dataset found in " + self._data_path)
             return
 
         with open(self._checkpoint_path, 'rb') as f:
-            database = pickle.load(f)
+            dataset = pickle.load(f)
 
-        annotations = database['annotations'][vid]['ped_annotations']
+        annotations = dataset['annotations'][vid]['ped_annotations']
         bboxes = annotations[ped][seq]['bbox'].astype(int)
         kps = annotations[ped][seq]['2dkp']
         frames = annotations[ped][seq]['frames']
@@ -381,7 +381,7 @@ class JAAD(object):
     
     def generate_dataset(self, compute_kps, regenerate):
         """
-        Generate a dataset based on JAAD database
+        Generate a dataset based on JAAD dataset
         :param compute_kps: If True, 2d keypoints are computed
         :param regenerate: If True, the dataset is regenerated
         
@@ -415,50 +415,50 @@ class JAAD(object):
 
         if os.path.isfile(self._checkpoint_path) and not regenerate:
             with open(self._checkpoint_path, 'rb') as f:
-                database = pickle.load(f)
-            database_vid_ID = database['split']['train_ID']+database['split']['test_ID']
-            nbr_seq_vid_ID = database['seq_per_vid']
+                dataset = pickle.load(f)
+            dataset_vid_ID = dataset['split']['train_ID']+dataset['split']['test_ID']
+            nbr_seq_vid_ID = dataset['seq_per_vid']
 
-            next_vid = database['ckpt'][:-3] + str(int(database['ckpt'][-3:])+1).zfill(3)
+            next_vid = dataset['ckpt'][:-3] + str(int(dataset['ckpt'][-3:])+1).zfill(3)
 
             if next_vid == 'video_0347':
                 print("\nDataset already created")
                 raise SystemExit
 
             video_ids = video_ids[video_ids.index(next_vid):]
-            print("Resuming database generation from ", next_vid)
+            print("Resuming datasset generation from ", next_vid)
         else:
-            database = {'ckpt': None,'seq_per_vid': [],'split': {'train_ID':[], 'test_ID': []}, 'annotations': {}}
-            database_vid_ID, nbr_seq_vid_ID = [], []
-            print("Generating database for jaad\n")
+            dataset = {'ckpt': None,'seq_per_vid': [],'split': {'train_ID':[], 'test_ID': []}, 'annotations': {}}
+            dataset_vid_ID, nbr_seq_vid_ID = [], []
+            print("Generating dataset for jaad\n")
 
         for vid in video_ids:
 
             print('\nGetting annotations for %s' % vid)
-            database['ckpt'] = vid
+            dataset['ckpt'] = vid
 
             processor = processor if compute_kps else None
             vid_annotations, nbr_seq = self._get_annotations(vid, processor, compute_kps)
 
             if (nbr_seq != 0):
-                database['annotations'][vid] = vid_annotations
-                database_vid_ID.append(vid)
+                dataset['annotations'][vid] = vid_annotations
+                dataset_vid_ID.append(vid)
                 nbr_seq_vid_ID.append(nbr_seq)
             
             if compute_kps or vid == video_ids[-1]:
 
                 # Creating testset/trainset
                 cumsum = np.cumsum(nbr_seq_vid_ID)/sum(nbr_seq_vid_ID)
-                database['seq_per_vid'] = nbr_seq_vid_ID
+                dataset['seq_per_vid'] = nbr_seq_vid_ID
                 res = next(x for x, val in enumerate(cumsum) if val > 0.2)
-                database['split']['train_ID'] = database_vid_ID[res:]
-                database['split']['test_ID'] = database_vid_ID[:res]
+                dataset['split']['train_ID'] = dataset_vid_ID[res:]
+                dataset['split']['test_ID'] = dataset_vid_ID[:res]
 
                 with open(self._checkpoint_path, 'wb') as f:
-                    pickle.dump(database, f, pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(dataset, f, pickle.HIGHEST_PROTOCOL)
 
                 if vid == video_ids[-1]:
-                  print('\nDatabase written to {}'.format(self._checkpoint_path))
+                  print('\nDataset written to {}'.format(self._checkpoint_path))
                 else:
                   print('\nCheckpoint saved to {}'.format(self._checkpoint_path))
         return 
