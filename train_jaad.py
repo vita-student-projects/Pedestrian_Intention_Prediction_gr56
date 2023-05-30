@@ -1,12 +1,10 @@
 import os
 import shutil
-import numpy as np
 import time
 import sys
 import errno
 import argparse
 from tqdm import tqdm
-import random
 import pprint as pp # pretty print
 import tensorboardX
 
@@ -22,11 +20,12 @@ from lib.utils.learning import *
 from lib.data.dataset_jaad import KPJAADDataset
 from lib.model.model_action import ActionNet
 
-random.seed(0)
-np.random.seed(0)
-torch.manual_seed(0)
-
 def parse_args():
+    '''
+    Function used to parse the launch arguments
+    Input : None
+    Output : opts (launch arguments)
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='configs/JAAD_train.yaml', help='Path to the config file.')
     parser.add_argument('-f', '--freq', type=int, default=100, help='Frequency of printing training metrics.')
@@ -36,6 +35,12 @@ def parse_args():
     return opts
 
 def train(args,opts):
+    '''
+    Function used to train the model
+    Input : args (config arguments)
+            opts (launch arguments)
+    Output : None
+    '''
     print('INFO: Starting training with the following parameters')
     pp.pprint(args)
 
@@ -61,12 +66,15 @@ def train(args,opts):
         if e.errno != errno.EEXIST:
             raise RuntimeError('Unable to create logs directory: {}'.format(args.logs_path))
 
+    #initialize a logger
     train_writer = tensorboardX.SummaryWriter(args.logs_path)
 
     print('INFO: Creating model')
     m_backbone = load_backbone(args)
     model = ActionNet(backbone=m_backbone, dim_rep=args.dim_rep, num_classes=args.action_classes, dropout_ratio=args.dropout_ratio, hidden_dim=args.hidden_dim, num_joints=args.num_joints)
     criterion = nn.CrossEntropyLoss()
+
+    #move the model to the GPU if available
     if torch.cuda.is_available():
         model = model.cuda()
         criterion = criterion.cuda()
@@ -98,6 +106,7 @@ def train(args,opts):
     train_loader = DataLoader(jaad_tr, **trainloader_params)
     test_loader = DataLoader(jaad_ts, **testloader_params)
 
+    #create the optimizer, we use AdamW for both the backbone and the head
     optimizer = optim.AdamW(
             [     {"params": filter(lambda p: p.requires_grad, model.backbone.parameters()), "lr": args.lr_backbone},
                   {"params": filter(lambda p: p.requires_grad, model.head.parameters()), "lr": args.lr_head},
@@ -107,8 +116,9 @@ def train(args,opts):
     
     scheduler = StepLR(optimizer, step_size=1, gamma=args.lr_decay)
     print('INFO: Training on {} batches'.format(len(train_loader)))
-    st = 0
 
+    #load the checkpoint if we are resuming training
+    st = 0
     if opts.checkpoint:
         if os.path.exists(args.chk_path):
             print('INFO: Loading checkpoint', args.chk_path)
@@ -123,28 +133,40 @@ def train(args,opts):
     print('INFO: Starting training ...')
     for epoch in range(st,args.epochs):
         print('INFO: Epoch {}/{}'.format(epoch+1, args.epochs))
+
+        #metric we keep track off
         losses_train = AverageMeter()
         acc = AverageMeter()
         batch_time = AverageMeter()
-        model.train() #put the model in training mode
+
+        #put the model in training mode
+        model.train() 
 
         end = time.time()
         for idx, (batch, label) in tqdm(enumerate(train_loader)):
             batch_size = len(batch)
+
+            #move the batch to the GPU if available
             if torch.cuda.is_available():
                 batch = batch.cuda()
                 label = label.cuda()
 
+            #forward pass
             optimizer.zero_grad()
             output = model(batch)
             loss = criterion(output, label)
+
+            #backward pass
             loss.backward()
             optimizer.step()
             
+            #update the metrics
             losses_train.update(loss.item(), batch_size)
             acc.update(accuracy(output, label), batch_size)
             batch_time.update(time.time()-end)
             end = time.time()
+
+            #print the metrics every opts.freq batches
             if (idx+1) % opts.freq == 0:
                 print('', end='\r') #clear the line
                 print('INFO: Batch:[{0}/{1}] '
@@ -154,17 +176,18 @@ def train(args,opts):
                 sys.stdout.flush() #print directly
         
         print('INFO: Starting testing for Epoch {}/{}'.format(epoch+1, args.epochs))
-        test_loss, test_acc = validate(test_loader, model, criterion)
+        test_loss, test_acc = validate(test_loader, model, criterion) #evaluate the model on the test set
         print('INFO: Testing done')
         print('Loss: {loss:.4f} Accuracy: {acc:.3f}'.format(loss=test_loss, acc=test_acc))
         scheduler.step()
         
+        #write the metrics to tensorboard for visualization
         train_writer.add_scalar('train_loss', losses_train.avg, epoch + 1)
         train_writer.add_scalar('train_acc', acc.avg, epoch + 1)
         train_writer.add_scalar('test_loss', test_loss, epoch + 1)
         train_writer.add_scalar('test_acc', test_acc, epoch + 1)
         
-
+        #saving the model checkpoint
         print('INFO: Saving checkpoint to', args.chk_path)
         torch.save({
             'epoch': epoch+1,
@@ -193,12 +216,17 @@ def validate(test_loader, model, criterion):
     losses = AverageMeter()
     accu = AverageMeter()
 
+    #disable gradient computation
     with torch.no_grad():
         for idx, (batch, label) in tqdm(enumerate(test_loader)):
             batch_size = len(batch)
+
+            #move the batch to the GPU if available
             if torch.cuda.is_available():
                 label = label.cuda()
                 batch = batch.cuda()
+
+            #forward pass
             output = model(batch)
             loss = criterion(output, label)
 
@@ -209,12 +237,18 @@ def validate(test_loader, model, criterion):
     return losses.avg, accu.avg
 
 def evaluate(args):
+    '''
+    Function used to evaluate the model on the test set from a checkpoint
+    Input : args (config arguments)
+    Output : None
+    '''
     print('INFO: Evaluating model')
-    
     print('INFO: Loading model')
     m_backbone = load_backbone(args)
     model = ActionNet(backbone=m_backbone, dim_rep=args.dim_rep, num_classes=args.action_classes, dropout_ratio=args.dropout_ratio, hidden_dim=args.hidden_dim, num_joints=args.num_joints)
     criterion = nn.CrossEntropyLoss()
+
+    #move the model to the GPU if available
     if torch.cuda.is_available():
         model = model.cuda()
         criterion = criterion.cuda()
@@ -230,17 +264,21 @@ def evaluate(args):
 
     jaad_ts = KPJAADDataset(data_path=args.data_path,is_train=False)
     test_loader = DataLoader(jaad_ts, **testloader_params)
+
+    #load the checkpoint
     model.load_state_dict(torch.load(args.chk_path, map_location=lambda storage, loc: storage)['model'], strict=True)
 
     print('INFO: Evaluating on {} batches'.format(len(test_loader)))
-    test_loss, acc = validate(test_loader, model, criterion)
+    test_loss, acc = validate(test_loader, model, criterion) #evaluate the model on the test set
     print('INFO: Evaluation done')
     print('INFO: Loss: {loss:.4f} Acc: {acc:.3f}'.format(loss=test_loss, acc=acc))
 
 
 if __name__ == '__main__':
-    opts = parse_args()
-    args = get_config(opts.config)
+    opts = parse_args() #parse the launch arguments
+    args = get_config(opts.config) #parse the config file
+
+    #check if we are evaluating or training
     if opts.eval:
         evaluate(args)
     else:
