@@ -1,8 +1,10 @@
 easydict==1.10
-numpy==1.24.3
+numpy==1.21.0
+opencv_python
+openpifpaf==0.13.11
 pickle5==0.0.12
+Pillow==9.5.0
 PyYAML==6.0
-scikit_learn==1.2.2
+scikit_learn==1.0
 tensorboardX==2.6
-torch==2.0.0+cpu
 tqdm==4.65.0
