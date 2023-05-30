@@ -66,7 +66,7 @@ The output of the code is a pickle file *jaad_database.pkl* containing a diction
 
 In this part we will explain how to train the model on the JAAD dataset.
 
-1. Follow the procedure of the part <span style="color:red">Create Dataset for training</span> to create the dataset and put it in the `data` folder.
+1. Follow the procedure of the part [Training Dataset Creation](#training-dataset-creation).
 2. create a config file in the `config` folder. You can use the `config/JAAD_train.yaml` file as a template.
 3. Fill the config file with the correct paths to the dataset and the correct wanted parameters.
 4. Run the following command:
@@ -92,7 +92,7 @@ tensorboard --logdir=logs/
 
 In this part we will explain how to evaluate the model on the JAAD dataset.
 
-1. Follow the procedure of the part <span style="color:red">Create Dataset for training</span> to create the dataset and put it in the `data` folder.
+1. Follow the procedure of the part [Training Dataset Creation](#training-dataset-creation).
 2. create a config file in the `config` folder. You can use the `config/JAAD_eval.yaml` file as a template.
 3. Fill the config file with the correct paths to the dataset and the correct wanted parameters (make sure that it is the same config file as the one used for training the model you want to evaluate).
 4. Run the following command:
@@ -105,7 +105,7 @@ python tain.py --config config/<your_config_file>.yaml -f <print_frequency> -e
 
 In this part we will explain how to use the model to predict the intention of pedestrians on a video.
 
-1. Follow the procedure of the part <span style="color:red">Create Dataset for Inference</span> to create the dataset from the video you want to use and put it in the `data` folder.
+1. Follow the procedure of the part [Inference Dataset Creation](#inference-dataset-creation)
 2. Create a config file in the `config` folder. You can use the `config/inference.yaml` file as a template.
 3. Fill the config file with the correct paths to the dataset and the correct wanted parameters (make sure that it is the same config file as the one used for training the model you want to use).
 4. Run the following command:

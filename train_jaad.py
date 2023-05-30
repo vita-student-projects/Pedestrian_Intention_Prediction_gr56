@@ -256,7 +256,7 @@ def validate(test_loader, model, criterion):
             accu.update(accuracy(output, label), batch_size)
             f1.update(f1_score(label.cpu().numpy(), output.argmax(dim=1).cpu().numpy(), average='macro'), batch_size) 
 
-    return losses.avg, accu.avg, f1
+    return losses.avg, accu.avg, f1.avg
 
 def evaluate(args):
     '''

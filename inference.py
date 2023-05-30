@@ -61,7 +61,7 @@ def infer_model(args):
     }
 
     #load the dataset on which we perform the inference and the model
-    jaad_ts = KPInfDataset(data_path=args.data_path)
+    jaad_ts = KPInfDataset(data_path=join('datagen/data/' + opts.filename + "_PIP.pkl"))
     test_loader = DataLoader(jaad_ts, **testloader_params)
     model.load_state_dict(torch.load(args.chk_path, map_location=lambda storage, loc: storage)['model'], strict=True)
 
@@ -131,7 +131,7 @@ def infer_model(args):
     with open(args.fname, 'w') as fp:
         json.dump(inference, fp)
     
-    print('INFO: Prediction saved in {}'.format(args.fname))
+    print('INFO: Prediction saved in {}'.format(join('datagen/infer_DB/infer_pred/'+ opts.filename + ".json")))
 
 class Inference(object):
     def __init__(self, data_path = ''):
