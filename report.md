@@ -18,14 +18,15 @@
 
 <p align="center">
     <img src="./images/Network_Architecture.jpg" width="80%" height="80%"/>
-<p>
+</p>
+
 &emsp; To solve the problem we're assigned, we choose to base our model on the [MotionBert](https://github.com/Walter0807/MotionBERT), a current state of the art model for 3D pose estimation and action recognition. While some of those tasks are not directly related to our problem, we believe that the part of the model implemented for action recognition could be adapted to our problem. In this project, our contribution is to adatpt the already existing MotionBert model to take as input 2D keyposes and bounding boxes, and to predict Crossing/Not-Crossing.
 
 ### 2.1 - Dataset Creation
 
 <p align="center">
     <img src="./images/Dataset_Creation.jpg" width="30%" height="30%"/>
-<p>
+</p>
 
 
 &emsp; Our Dataset is based on the JAAD Database, a video Database with annotations often used to train Deep Learning models in the context of autonomous driving. The motivations for choosing such a Database will be further developped in the next section. To get started, a first step was to understand the structure of the Database, and to get familiar with the annotations. As our model needs sequences of specific data only from relevant pedestrians, a new Dataset was created to best fit our needs. Most of the annotations provided by the Database were discarded only to keep a few such as bounding boxes and occlusion. The Dataset was then organized in sequences of 1 seconds, overlapping each other by 0.5 second to best capture the motion of the pedestrian. Since the JAAD model provides a label Crossing/Not-Crossing for each frame, a new label per sequence was created and assigned to the sequence if at least one frame of the sequence was labeled as Crossing. 
@@ -38,7 +39,7 @@
 
 <p align="center">
     <img src="./images/Training.jpg" width="50%" height="50%"/>
-<p>
+</p>
  
 &emsp; To begin this part, time was spent to get acquainted with MotionBert and run main functions created for this specific model such as the training or the testing. This step was important to get a more precise idea the current structure and work needed, of the functions to implement to adapt to our needs, and the ones to get rid of. 
 
@@ -50,7 +51,7 @@
 
 <p align="center">
     <img src="./images/Inference.jpg" width="50%" height="50%"/>
-<p>
+</p>
 
 &emsp; In order to run inference, the created model needs as input 2D keypoints, bounding boxes and occlusion. Since this is not provided in the video for inference, it had to be created. To generate this data, a new function was created to run OpenPifPaf on the video, and to store the generated keypoints and bounding boxes in a pickle file, and the keypoints are then processed in another function to best adapt to the model's input.
 
