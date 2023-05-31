@@ -1,11 +1,35 @@
-# Report
+# Project - Pedestrian Intention Predicition 
 
-## Acknowledgment
+*<p style="text-align: center;">This project was made in the context of the [CIVIL-459:Deep Learning for Autonomous Vehicles](https://edu.epfl.ch/coursebook/en/deep-learning-for-autonomous-vehicles-CIVIL-459) course at EPFL. The goal was to solve a task related to autonomous vehicles using deep learning that bring a contribution to the state of the art in order in the end to reproduce the autopilot of an Autonomous Vehicle.</p>*
 
 ## Contents
 
-
-###Table des matières
+1. [Project Motivation & Objectives](#1---project-motivation--objectives)
+2. [Contribution Overview](#2---contribution-overview)
+    1. [Dataset Creation](#21---dataset-creation)
+    2. [Model Modification and Adaptation for Training & Testing](#22---model-modification-and-adaptation-for-training--testing)
+    3. [Inference Data Creation & Model Prediction](#23---inference-data-creation--model-prediction)
+3. [Description of the Data](#3---description-of-the-data)
+    1. [JAAD Dataset](#31---jaad-dataset)
+    2. [Inference Data](#32---inference-data)
+4. [Experimental Setup and Results](#4---experimental-setup-and-results)
+    1. [Experimental Setup](#41---experiments-setup)
+        1. [Metrics](#411---metrics)
+        2. [Overfitting](#412---overfitting)
+        3. [1. Bounding box only](#1-bounding-box-only)
+        4. [2. Regularization + Less complex model](#2-regularization--less-complex-model)
+        5. [3. Keypoints](#3-keypoints)
+        6. [4. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence](#4-bounding-box-occlusion--keypoints--1s-prediction-1s-seqence)
+        7. [5. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence + dynamic detection to identify the pedestrian](#5-bounding-box-occlusion--keypoints--1s-prediction-1s-seqence--dynamic-detection-to-identify-the-pedestrian)
+    2. [Results](#results)
+        1. [Overfitting](#overfitting)
+        2. [1. Bounding box only](#1-bounding-box-only-1)
+        3. [2. Regularization + Less complex model](#2-regularization--less-complex-model-1)
+        4. [3. keypoints](#3-keypoints-1)
+        5. [4. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence](#4-bounding-box-occlusion--keypoints--1s-prediction-1s-seqence-1)
+        6. [5. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence + dynamic detection to identify the pedestrian](#5-bounding-box-occlusion--keypoints--1s-prediction-1s-seqence--dynamic-detection-to-identify-the-pedestrian-1)
+        7. [Best Checkpoint Result Comparison](#best-checkpoint-result-comparison)
+5. [Conclusion](#conclusion)
 
 
 
@@ -157,27 +181,31 @@ Dictionnary keys :
 &emsp; To make sure our system could model the problem, we first made sure that it was able to overfit a small portion of the training set. A small training set of 10 sequences was used and the model was trained for 20 epochs. It was observed that the model was able to overfit the training set, and it was thus concluded that data could be modeled by our system.
 
 #### 1. Bounding box only
-&emsp; The first idea we had was to give to the model only the **bounding box** of the pedestrian. As it contains the position of the pedestrian in the image, we thought that it could be enough for the model to predict the crossing intention.
+&emsp; The first idea we had was to trying to give to the model only the **bounding boxes** of the pedestrian. It contains the position of the pedestrian in the image, thus we thought that it could be enough for the model to predict the crossing intention (most of the time the car has a camera from the point of view of the driver then the relative position of a pedestrian in the image could be good enough to predict his intention).
 We used scitas and google collab to generate the Dataset and train the model. We also used the same hypeparameters as the one used in the original paper and we juste changed the dimension of the input and output of the network.
 
 #### 2. Regularization + Less complex model
-&emsp; As the first experiment didn't give good results, and that it was quickly overfitting we thought that the model was maybe too complex for our problem. We decided to use a **less complex model** and to add some **regularization** to the model.
+&emsp; The result of the first experiment was satisfying for a first experiment. However it was quickly overfitting thus we thought that the model was maybe too complex for our problem. We decided to use a **less complex model** and to add some **regularization** to the model.
 
 &emsp; To do so, we looked into the structure of the model in the original paper and using tensorboard visualization and we noticed that the model was composed of 5 blocks of spatial and temporale encoding layers in the original architecture. This seems to be too much taking into account that with only the bounding box as input, the model has less information to process. We decided to reduce the number of blocks to 3.
 
 &emsp; We also added some regularization to the model by increasing the weight decay and the dropout rate.
 
-#### 3. Bounding box, occlusion + keypoints
-&emsp; As the second experiment was also not giving conclusive results, we decided to add the **keypoints** to the input of the model. As we don't have keypoints in JAAD, we used **openpifpaf** to estimate them for all the videos. 
+#### 3. Keypoints
+&emsp; As the second experiment was also not giving conclusive results, we decided to give more information to the model and we decided to use **2D pose keypoints** to the input of the model. As we don't have keypoints in JAAD, we used **openpifpaf** to estimate them for all the videos. 
 
-We thought that it could help the model to better understand the position of the pedestrian, more specificaly the model would be then able to understand aspect of the pedestrian like when it looks or notice the car, the way his body is oriented, etc. We also add to the model the occlusion score given by JAAD. Moreover, MotionBert was originally trained to use keypoints as input, so we thought that it could be a good idea to use them.
+We thought that it could help the model to better understand the position of the pedestrian, more specificaly the model would be then able to understand aspect of the pedestrian like when it looks or notice the car, the way his body is oriented, etc. Moreover, MotionBert was originally trained to use keypoints as input, so we thought that it could be a good idea to use them.
 
 #### 4. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence:
-&emsp; The third experiment didn't show any particular improvement neither. We decided to try to predict the crossing intention of the pedestrian using **1 second instead of 2 second** frome the video as input sequence length. We thought that it could help the model to better generalize. We also tried to increase the prediction fame to 1 second in the future instead of 0.5 second. We thought that it could help the model to better understand the intention of the pedestrian.
+&emsp; The third experiment didn't show any particular improvement neither. We decided to try to predict the crossing intention of the pedestrian using **1 second instead of 2 second** from the video as input sequence length. We thought that it could help the model to better generalize. 
+
+We also tried to increase the prediction fame to 1 second in the future instead of 0.5 second. We thought that it could help the model to better understand the intention of the pedestrian. 
+
+Finally we added information about the **ground truth bounding box** and the **occlusion score** in order for the model to be able to have access to the position information even when openpifpaf doesn't detect keypoints.
 
 #### 5. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence + dynamic detection to identify the pedestrian:
 
-&emsp; As a last experiment, we decided to try to use a **dynamic detection** to identify the pedestrian in the video. Before that we we're using a constant threshold to identify the correspondancy between the bouding box given by JAAD and the keypoints given by openpifpaf and we thought that this may cause error in the identification process. In order to solve that, we use in this experiment dynamic distances between keypoints and bounding boxes to identify the pedestrian.
+&emsp; As a last experiment, we decided to try to use a **dynamic detection** to identify the pedestrian in the video in order to reduce the potential error we could have in the identification of the pedestrian. Before that we we're using a constant threshold to identify the correspondancy between the bouding box given by JAAD and the keypoints given by openpifpaf and we thought that this may cause error in the identification process. To solve that, we use in this experiment dynamic distances between keypoints and bounding boxes to identify the pedestrian.
 
 ### Results
 
@@ -185,75 +213,62 @@ We thought that it could help the model to better understand the position of the
 
 ![overfitting](./images/overfitting.png)
 
-As we can see on the plot, the model is able to overfit a little training set. We achieve an accuracy of 100%, F1 of 1 and a loss of 0. This is a good sign that the model is able to learn.
+As we can see on the plot, the model is able to overfit on a little training set. We achieved an accuracy of 100%, F1 of 1 and a loss of 0. This is a good sign that the model is able to learn.
 
 #### 1. Bounding box only
 
 - <u>during training :</u>
 <image>
 
-- <u>final result (best epoch) :</u>
+- <u>discussion :</u> 
 
-| Loss | Accuracy | F1 score |
-|------|----------|----------|
-| 0.6931 | 0.5000 | 0.6667 |
+The result are pretty satisfying for a first experiment. We're able to achieve an accuracy of 70 % in average only with the bounding box. However, we can see that the model is overfitting very quickly. We think that it's because the model is too complex for the low complexity input. 
 
-- <u>discussion :</u>  
+For the next experiment we decided to try to reduce the complexity of the model and to add some regularization in order to try solving the overfitting problem.
 
 #### 2. Regularization + Less complex model
 
 - <u>during training :</u>
 <image>
 
-- <u>final result (best epoch) :</u>
-
-| Loss | Accuracy | F1 score |
-|------|----------|----------|
-| 0.6931 | 0.5000 | 0.6667 |
-
 - <u>discussion :</u> 
 
-#### 3. Bounding box, occlusion + keypoints
+#### 3. keypoints
 
 - <u>during training :</u>
 <image>
-
-- <u>final result (best epoch) :</u>
-
-| Loss | Accuracy | F1 score |
-|------|----------|----------|
-| 0.6931 | 0.5000 | 0.6667 |
 
 - <u>discussion :</u> 
 
 #### 4. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence
 
 - <u>during training :</u>
-<image>
-
-- <u>final result (best epoch) :</u>
-
-| Loss | Accuracy | F1 score |
-|------|----------|----------|
-| 0.5084 | 0.7044 | 0.5850 |
+![training plot 4](./images/exp4.png)
 
 - <u>discussion :</u> 
+
+As we can see in the result, this experiment didn't bring improvement, it even perform less good than with just the keypoints. We think that this can be caused by the fact that by bringing the bounding box we thought that the model will be able to have information even when openepifpaf doesn't detect keypoints. However if the detection gives wrong keypoints, it can cause errors in the identification of the pedestrian or just comprehension erro for the model that can't learn to use the bounding box to estimate the position when he doesn't have the keypoints.
+For this reason we decided to try to use a dynamic detection to identify the pedestrian.
 
 #### 5. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence + dynamic detection to identify the pedestrian
 
 - <u>during training :</u>
 
-![training plot](./images/exp5.png)
-
-- <u>final result (best epoch) :</u>
-
-| Loss | Accuracy | F1 score |
-|------|----------|----------|
-| 0.6488 | 0.7442 | 0.5949  |
+![training plot 5](./images/exp5.png)
 
 - <u>discussion :</u> 
 
-As we can see on the result, we didn't get any particular improvement on the final accuracy. However, we can definitly see that during the traning the accuracy seems more stable and that's an improvement compare to the last experiment. 
+As we can see on the result, we didn't get any particular improvement on the loss. However the best checkpoint we have and the mean accuracy and f1 measure seems to be a bit impoved (0.7442 vs 0.7044 for the accuracy and 0.5949 vs 0.5850 for the f1 measure). We can see that the model is able to generalize a bit better. Thus we can conclude that the dynamic detection is a good idea to improve the result of the model.
+
+#### Best Checkpoint Result Comparison :
+
+| Experiment | Loss | Accuracy | F1 score |
+|------------|------|----------|----------|
+|     5      | 0.6488 | 0.7442 | 0.5949   |
+|     4      | 0.5084 | 0.7044 | 0.5850   |
+|     3      | 0.6931 | 0.5000 | 0.6667   |
+|     2      | 0.6931 | 0.5000 | 0.6667   |
+|     1      | 0.6931 | 0.5000 | 0.6667   |
 
 ## Conclusion
 
