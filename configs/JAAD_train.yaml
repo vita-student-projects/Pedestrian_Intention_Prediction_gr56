@@ -21,7 +21,7 @@ hidden_dim: 2048
 dropout_ratio: 0.5
 
 # Data
-data_path: data/jaad_dataset.pkl
+data_path: datagen/data/jaad_dataset.pkl
 chk_path: checkpoints/latest_epoch.bin
 best_chk_path: checkpoints/best_epoch.bin
 logs_path: logs/
