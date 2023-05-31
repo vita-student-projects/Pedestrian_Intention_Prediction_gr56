@@ -2,9 +2,9 @@
 
 ## Introduction
 
-This project propose a model to predict the intention of pedestrians in a video. The model is based on the [MotionBert](https://github.com/Walter0807/MotionBERT) model. The model is trained on the [JAAD dataset](https://data.nvision2.eecs.yorku.ca/JAAD_dataset/) and evaluated on the same dataset. For more information about the model and its performances, please refer to the [report.md](https://github.com/Yseoo/Pedestrian-Intention-Predicition/tree/main/report.md) documentation.
+This project propose a model to predict the intention of pedestrians in a video. The model is based on the [MotionBert](https://github.com/Walter0807/MotionBERT) model and is trained and evaluated on the [JAAD dataset](https://data.nvision2.eecs.yorku.ca/JAAD_dataset/). For more information about the model and its performances, please refer to the [report.md](https://github.com/Yseoo/Pedestrian-Intention-Predicition/tree/main/report.md) documentation.
 
-This project was made in the context of the [CIVIL-459:Deep Learning for Autonomous Vehicles](https://edu.epfl.ch/coursebook/en/deep-learning-for-autonomous-vehicles-CIVIL-459) course at EPFL. The goal was to solve a task related to autonomous vehicles using deep learning, in groups of 2,that bring a contribution to the state of the art in order in the end to reproduce the autopilot of an autonomous vehicle.
+This project was made in the context of the [CIVIL-459:Deep Learning for Autonomous Vehicles](https://edu.epfl.ch/coursebook/en/deep-learning-for-autonomous-vehicles-CIVIL-459) course at EPFL. The goal was to solve a task related to autonomous vehicles using deep learning that bring a contribution to the state of the art in order in the end to reproduce the autopilot of an Autonomous Vehicle.
 
 ## Installation
 

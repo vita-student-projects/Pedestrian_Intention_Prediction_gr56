@@ -296,20 +296,19 @@ class Inference(object):
         :param filename: Name of the file without the extension
 
         Dictionary structure:
-        'vid_id'(str):      str
+        'vid_id':           str
         'num_seq':          int
-        'forecast_step':      int
+        'forecast_step':    int
         'nbr_frame_seq':    int
         'total_frame_vid':  int
         'width':            int
         'height':           int
         'per_seq_ped':      list (list (int))
         'ped_annotations':      list (dict) 
-            'ped_id'(str):          list (dict) 
-                'frames':               list (int)
-                'occlusion':            list (int)
-                'bbox':                 list ([x1 (float), y1 (float), x2 (float), y2 (float)])
-                '2dkp':                 list (array(array))
+            'frames':               list (int)
+            'occlusion':            list (int)
+            'bbox':                 list ([x1 (float), y1 (float), x2 (float), y2 (float)])
+            '2dkp':                 list (array(array))
         """
 
         pkl_file_path = join(self._infer_pkl_path, filename + "_OPP.pkl")

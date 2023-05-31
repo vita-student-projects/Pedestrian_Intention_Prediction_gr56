@@ -42,8 +42,85 @@
 
 &emsp; To visualize and better evaluate the results of the inference, a new function was created to draw the bounding boxes on the video with the predicted labels, and to save it as a new video. To do, this function takes as input the inference video, and the json file containing the predictions.
 
-## 3 - Description of the Dataset
+## 3 - Description of the Data
 
+### 3.1 - JAAD Dataset
+
+The pickle datafile contaning the JAAD dataset processed for our model has the following dictionnary structure:
+``` 
+'annotations': 
+    'vid_id'(str): 
+        'num_frames':               int
+        'width':                    int
+        'height':                   int
+        'ped_annotations':          list (dict)
+            'ped_id'(str):              list (dict)
+                'old_id':                   str
+                'frames':                   list (int)
+                'occlusion':                list (int)
+                'bbox':                     list ([x1 (float), y1 (float), x2 (float), y2 (float)])
+                '2dkp':                     list (array(array))
+                'cross':                    int
+'split': 
+    'train_ID':     list (str)
+    'test_ID':      list (str)
+'ckpt': str
+'seq_per_vid': list (int)
+```
+
+Dictionnary keys :
+- `'annotations'` - list of video dictionnaries used for training and testing the model
+- `'vid_id' (str)` - dictionnary of the properties for the video `'vid_id'`
+- `'width'` - width of the video `'vid_id'`
+- `'height'` - height of the video `'vid_id'`
+- `'ped_annotations' (str)` - list of pedestrians in the video `'vid_id'`
+- `'ped_id (str)'` - list of sequences annotations dictionnaries for pedestrian `'ped_id (str)'`
+- `'old_id'` - default `'old_id'` from the JAAD Database
+- `'frames'` - list of frame number relative to the video `'vid_id'` contained in the current sequence
+- `'occlusion'` - list of occlusion for all the frames contained in the current sequence containing the frames `'frames'`
+- `'bbox'` - list of bounding boxes for all the frames contained in the current sequence containing the frames `'frames'`
+- `'2dkp'` - list of arrays of 2D keypoints for all the frames contained in the current sequence containing the frames `'frames'`
+- `'cross'` - label cross (0 or 1) for the current sequence containing the frames `'frames'`
+- `'split'` - dictionnary with the `'train_ID'` and `'test_ID'`
+- `'train_ID'` - list of `'vid_id'` contained in the training set (80% of the data)
+- `'test_ID'` - list of `'vid_id'` contained in the testing set (20% of the data)
+- `'ckpt'` - last `'vid_id'` that was being processed
+- `'seq_per_vid'` - list of number of sequences per video for all videos
+
+
+### 3.2 - Inference Data
+
+Dictionary structure:
+```
+'vid_id':           str
+'num_seq':          int
+'forecast_step':    int
+'nbr_frame_seq':    int
+'total_frame_vid':  int
+'width':            int
+'height':           int
+'per_seq_ped':      list (list (int))
+'ped_annotations':      list (dict) 
+    'frames':               list (int)
+    'occlusion':            list (int)
+    'bbox':                 list ([x1 (float), y1 (float), x2 (float), y2 (float)])
+    '2dkp':                 list (array(array))
+```
+
+Dictionnary keys :
+- `'vid_id'` - filename of the inference video without extension
+- `'num_seq'` - number of sequences created
+- `'forecast_step'` - overlap step between sequences
+- `'nbr_frame_seq'` - number of frames per sequences
+- `'total_frame_vid'` - total number of frames in the video
+- `'width'` - width of the inference video
+- `'height'` - height of the inference video
+- `'per_seq_ped'` - list of list of index of pedestrian for each sequence
+- `'ped_annotations'` - list of pedestrians in the inference video
+- `'frames'` - list of frame number relative to the inference video contained in the current sequence of the current pedestrian
+- `'occlusion'` - list of occlusion for the current pedestrian for all the frames contained in the current sequence containing the frames `'frames'`
+- `'bbox'` - list of bounding boxes for the current pedestrian for all the frames contained in the current sequence containing the frames `'frames'`
+- `'2dkp'` - list of arrays of 2D keypoints for the current pedestrian for all the frames contained in the current sequence containing the frames `'frames'`
 
 
 ## 4 - Experimental Setup and Results

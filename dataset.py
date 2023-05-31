@@ -391,14 +391,14 @@ class JAAD(object):
                 'num_frames':               int
                 'width':                    int
                 'height':                   int
-                'ped_annotations'(str):     list (dict)
-                    'ped_id'(str):              list (dict) {
+                'ped_annotations':          list (dict)
+                    'ped_id'(str):              list (dict)
                         'old_id':                   str
                         'frames':                   list (int)
                         'occlusion':                list (int)
                         'bbox':                     list ([x1 (float), y1 (float), x2 (float), y2 (float)])
                         '2dkp':                     list (array(array))
-                        'cross':                    list (int)
+                        'cross':                    int
         'split': 
             'train_ID':     list (str)
             'test_ID':      list (str)
