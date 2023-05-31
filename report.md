@@ -238,7 +238,7 @@ As we can see on the plot, the model is able to overfit on a little training set
 
 - <u>discussion :</u> 
 
-#### 4. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence
+#### 4. Bounding box, occlusion + keypoints + 1s prediction, 1s sequence
 
 - <u>during training :</u>
 ![training plot 4](./images/exp4.png)
@@ -247,7 +247,7 @@ As we can see on the plot, the model is able to overfit on a little training set
 
 <div style="text-align: justify">&emsp;As we can see in the result, this experiment didn't bring improvement, it even perform less good than with just the keypoints. We think that this can be caused by the fact that by bringing the bounding box we thought that the model will be able to have information even when openepifpaf doesn't detect keypoints. However if the detection gives wrong keypoints, it can cause errors in the identification of the pedestrian or just comprehension erro for the model that can't learn to use the bounding box to estimate the position when he doesn't have the keypoints. For this reason we decided to try to use a dynamic detection to identify the pedestrian.</div>
 
-#### 5. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence + dynamic detection to identify the pedestrian
+#### 5. Bounding box, occlusion + keypoints + 1s prediction, 1s sequence + dynamic detection to identify the pedestrian
 
 - <u>during training :</u>
 
