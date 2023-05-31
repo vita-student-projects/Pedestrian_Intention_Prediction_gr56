@@ -1,5 +1,9 @@
 # Pedestrian Intention Prediction (based on [MotionBert](https://github.com/Walter0807/MotionBERT))
 
+<p align="center">
+    <img src="images/example2.gif" width="70%" height="50%"/>
+</p>
+
 ## Table of Contents :
 
 1. [Introduction](#1-introduction)
