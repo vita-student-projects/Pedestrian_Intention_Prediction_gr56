@@ -1,5 +1,14 @@
 # Pedestrian Intention Prediction (based on [MotionBert](https://github.com/Walter0807/MotionBERT))
 
+## Table of Contents :
+
+1. [Introduction](#1-introduction)
+2. [Installation](#2-installation)
+3. [Training Dataset Generation](#3-training-dataset-generation)
+4. [Training](#4-training)
+5. [Evaluation](#5-evaluation)
+6. [Inference](#6-inference)
+
 ## 1. Introduction
 
 This project propose a model to predict the intention of pedestrians in a video. The model is based on the [MotionBert](https://github.com/Walter0807/MotionBERT) model and is trained and evaluated on the [JAAD dataset](https://data.nvision2.eecs.yorku.ca/JAAD_dataset/). For more information about the model and its performances, please refer to the [report.md](https://github.com/Yseoo/Pedestrian-Intention-Predicition/tree/main/report.md) documentation.
