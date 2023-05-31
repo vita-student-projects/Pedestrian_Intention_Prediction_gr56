@@ -218,7 +218,7 @@ As we can see on the plot, the model is able to overfit a little training set. W
 
 | Loss | Accuracy | F1 score |
 |------|----------|----------|
-| 0.6931 | 0.5000 | 0.6667 |
+| 0.5084 | 0.7044 | 0.5850 |
 
 - <u>discussion :</u> 
 
