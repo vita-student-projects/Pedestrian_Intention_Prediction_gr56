@@ -67,9 +67,15 @@
  
 <div style="text-align: justify">&emsp; To begin this part, time was spent to get acquainted with MotionBert and run main functions created for this specific model such as the training or the testing. This step was important to get a more precise idea the current structure and work needed, of the functions to implement to adapt to our needs, and the ones to get rid of.</div> 
 
-<div style="text-align: justify">&emsp; To process and extract data from the Dataset pickle file previously created and intended for our model, new Dataset subclasses (for bounding boxes only, and bounding boxes & 2D keypoints) returning the data in the right format for the training and testing DataLoader was created.</div>
+<div style="text-align: justify">&emsp; To process and extract data from the Dataset pickle file previously created and intended for our model, we created new Dataset subclasses (for bounding boxes only, for keypoints only and for bounding boxes & 2D keypoints) returning the data in the right format for the training and testing DataLoader was created.</div>
 
-<div style="text-align: justify">&emsp; A new training file was created implementing the important training, validating and evaluating function. This training file was modified to take into account the new Dataset subclasses, and a new specific configuration file *JAAD_train.yaml* previously created to store the network specifications and choosen training parameters. The training function is implementing a checkpoint system to save the best model, the last epoch, and to record the currently implemented metrics such as Loss, Accuracy, and F1.</div> 
+<div style="text-align: justify">&emsp; A new training file was created implementing the important training, validating and evaluating function (to respectively train, test and evaluate the network). This training file was modified to take into account the new Dataset subclasses, and a new specific configuration file JAAD_train.yaml previously created to store the network specifications and choosen training parameters. 
+
+In the training function we implemented a system to save the latest_epoch checkpoint, in order to be able to resume to it whenever we wanted, and a system that saves the best checkpoint (the one with the best accuracy).
+
+We also used tensorboard to create logs monitoring 3 metrics : the loss, the accuracy and the f1-score, this way we can use the tensorboard interface to visualizate the evolution of those score through the epoch for both training and testing.
+
+Finally we also used tensorboard to create a model visualization in order to explore freely in a visual interface the characteristic and structure of the model.</div> 
 
 ### 2.3 - Inference Data Creation & Model Prediction
 
@@ -79,7 +85,7 @@
 
 <div style="text-align: justify">&emsp; In order to run inference, the created model needs as input 2D keypoints, bounding boxes and occlusion. Since this is not provided in the video for inference, it had to be created. To generate this data, a new function was created to run OpenPifPaf on the video, and to store the generated keypoints and bounding boxes in a pickle file, and the keypoints are then processed in another function to best adapt to the model's input.</div>
 
-<div style="text-align: justify">&emsp; A new inference file (containing the above functions) was created to make predictions on any video, and the to save them in a json file. This file was also modified to support a new Dataset subclasses *KPInfDataset* loading the pickle file storing the inference data extracted from the inference video. This file allows to run the model on the processed inference data, and to save the predictions with their correspondant pedestrian bounding box in a json file.</div>
+<div style="text-align: justify">&emsp; A new inference file (containing the above functions) was created to make predictions on any video, and the to save them in a json file. This file was also modified to support a new Dataset subclasses KPInfDataset loading the pickle file storing the inference data extracted from the inference video. This file allows to run the model on the processed inference data, and to save the predictions with their correspondant pedestrian bounding box in a json file.</div>
 
 <div style="text-align: justify">&emsp; To visualize and better evaluate the results of the inference, a new function was created to draw the bounding boxes on the video with the predicted labels, and to save it as a new video. To do, this function takes as input the inference video, and the json file containing the predictions.</div>
 
@@ -174,7 +180,7 @@ Dictionnary keys :
 
 &emsp; To evaluate the performances of our model, **three main metrics** were used: the ***loss***, the ***accuracy*** and the ***F1 score***.
 
-<div style="text-align: justify">&emsp;The loss is computed, and optimised by the model during both the training and the testing. We compute a CrossEntropyLoss for our model. The accuracy is the percentage of correct prediction made by the model both on the training set and the testing set. To make the prediction we choose the class (crossing or not crossing) that get the highest softmax probability. This way of computing the loss and accuracy may create what we observe in the result : the fact that for the training the loss increase but the accuracy stays pretty much constant. The F1 score is the harmonic mean of the precision and recall. The precision is the percentage of correct positive prediction made by the model. The recall is the percentage of positive prediction made by the model that are correct. We compute the F1 measure also on the training and testing set.</div>
+<div style="text-align: justify">&emsp;The loss is computed by the model during both the training and the testing. We compute a CrossEntropyLoss for our model. The accuracy is the percentage of correct prediction made by the model both on the training set and the testing set. To make the prediction we choose the class (crossing or not crossing) that get the highest softmax probability. This way of computing the loss and accuracy may create what we observe in the result : the fact that for the training the loss increase but the accuracy stays pretty much constant. The F1 score is the harmonic mean of the precision and recall. The precision is the percentage of correct positive prediction made by the model. The recall is the percentage of positive prediction made by the model that are correct. We compute the F1 measure also on the training and testing set. However we start using the F1 measure latter in the experimental process so for the 2 first experiment, we don't have f1-score data</div>
 
 #### 4.1.2 - Overfitting 
 
@@ -185,25 +191,23 @@ Dictionnary keys :
 We used scitas and google collab to generate the Dataset and train the model. We also used the same hypeparameters as the one used in the original paper and we juste changed the dimension of the input and output of the network.</div>
 
 #### 2. Regularization + Less complex model
-<div style="text-align: justify">&emsp; The result of the first experiment was satisfying for a first experiment. However it was quickly overfitting thus we thought that the model was maybe too complex for our problem. We decided to use a less complex model and to add some regularization to the model.</div>
+<div style="text-align: justify">&emsp; The result of the first experiment was satisfying. However it was quickly overfitting thus we thought that the model was maybe too complex for our problem. We decided to use a less complex model and to add some regularization.</div>
 
-<div style="text-align: justify">&emsp; To do so, we looked into the structure of the model in the original paper and using tensorboard visualization and we noticed that the model was composed of 5 blocks of spatial and temporale encoding layers in the original architecture. This seems to be too much taking into account that with only the bounding box as input, the model has less information to process. We decided to reduce the number of blocks to 3. We also added some regularization to the model by increasing the weight decay and the dropout rate.</div>
+<div style="text-align: justify">&emsp; To do so, we looked into the structure of the model in the original paper and using tensorboard visualization and we noticed that the model was composed of 5 blocks of spatial and temporal encoding layers in the original architecture. This seems to be too much taking into account the fact that with only the bounding box as input, the model has less information to process. We decided to reduce the number of blocks to 2. We also added some regularization to the model by increasing the weight decay and the dropout rate.</div>
 
 #### 3. Keypoints
-<div style="text-align: justify">&emsp; As the second experiment was also not giving conclusive results, we decided to give more information to the model and we decided to use 2D pose keypoints to the input of the model. As we don't have keypoints in JAAD, we used openpifpaf to estimate them for all the videos.</div>
+<div style="text-align: justify">&emsp; The second experiment shows encouraging result, but we wanted to try improving the accuracy even more. Thus we decided to give more information to the model and we decided to use 2D pose keypoints to the input of the model. As we don't have keypoints in JAAD, we used openpifpaf to estimate them for all the videos.</div>
 
-<div style="text-align: justify">We thought that it could help the model to better understand the position of the pedestrian, more specificaly the model would be then able to understand aspect of the pedestrian like when it looks or notice the car, the way his body is oriented, etc. Moreover, MotionBert was originally trained to use keypoints as input, so we thought that it could be a good idea to use them.</div>
+<div style="text-align: justify">&emsp;We thought that it could help the model to better understand the position of the pedestrian, more specificaly the model would be then able to understand aspect of the pedestrian like when it looks or notices the car, the way his body is oriented, etc. Moreover, the structure of MotionBert was originally trained to use keypoints as input, so we thought that it could be a good idea to use them.</div>
 
 #### 4. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence:
-<div style="text-align: justify">&emsp; The third experiment didn't show any particular improvement neither. We decided to try to predict the crossing intention of the pedestrian using 1 second instead of 2 second from the video as input sequence length. We thought that it could help the model to better generalize.</div>
+<div style="text-align: justify">&emsp;The third experiment achieved a better accuracy and a good f1-score. However, we noticed that some for frame for different pedestrians openpifpaf wasn't able to detect the pose and thus the model didn't had information even on the location of the pedestrian for those frames. We then thought that a good idea would be to provide the ground thruth bounding boxes given in the JAAD dataset to the model. We also provided the model the occlusion score, so it can have more informations about why keypoints could be occluded and it can learn when to focus on the bounding box.</div>
 
-<div style="text-align: justify">&emsp; We also tried to increase the prediction fame to 1 second in the future instead of 0.5 second. We thought that it could help the model to better understand the intention of the pedestrian.</div>
-
-<div style="text-align: justify">&emsp; Finally we added information about the ground truth bounding box and the occlusion score in order for the model to be able to have access to the position information even when openpifpaf doesn't detect keypoints.</div>
+<div style="text-align: justify">&emsp; We also tried to increase the prediction fame to 1 second in the future instead of 0.5 second. We thought that it could help the model to better understand the intention of the pedestrian and we try to use 1 second for prediction instead of 2 second, to allow the model to generalize better</div>
 
 #### 5. Bounding box, occlusion + keypoints + 1s prediction, 1s seqence + dynamic detection to identify the pedestrian:
 
-<div style="text-align: justify">&emsp; As a last experiment, we decided to try to use a dynamic detection to identify the pedestrian in the video in order to reduce the potential error we could have in the identification of the pedestrian. Before that we we're using a constant threshold to identify the correspondancy between the bouding box given by JAAD and the keypoints given by openpifpaf and we thought that this may cause error in the identification process. To solve that, we use in this experiment dynamic distances between keypoints and bounding boxes to identify the pedestrian.</div>
+<div style="text-align: justify">&emsp; As a last experiment result were less good that what we previously add, we decided to try to use a dynamic detection to identify the pedestrian in the video, instead of the constant method we were using, in order to reduce the potential error we could have in the identification of the pedestrian. Before that the usage of a constant threshold to identify the correspondancy between the bouding box given by JAAD and the keypoints given by openpifpaf may cause error in the identification process. To solve that, we used the dynamic distances between keypoints and bounding boxes to identify the pedestrian.</div>
 
 ### Results
 
@@ -216,7 +220,8 @@ As we can see on the plot, the model is able to overfit on a little training set
 #### 1. Bounding box only
 
 - <u>during training :</u>
-<image>
+
+![training plot 1](./images/exp1.png)
 
 - <u>discussion :</u> 
 
@@ -227,25 +232,37 @@ As we can see on the plot, the model is able to overfit on a little training set
 #### 2. Regularization + Less complex model
 
 - <u>during training :</u>
-<image>
+
+![training plot 2](./images/exp2.png)
 
 - <u>discussion :</u> 
+
+<div style="text-align: justify">&emsp; As we can see on the result, We achieve to reduce the overfitting of the model by doing this (training accuracy around 75% instead of 82% at the epoch 50) and we even increased the accuracy on the testing set.</div>
+
+<div style="text-align: justify">&emsp; As a next step we thought that giving the model more information could help him to better understand the problem. Thus we decided to try to give him the keypoints of the pedestrian.</div>
+
 
 #### 3. keypoints
 
 - <u>during training :</u>
-<image>
 
-- <u>discussion :</u> 
+![training plot 3](./images/exp3.png)
+
+- <u>discussion :</u>
+
+<div style="text-align: justify">&emsp; The result shows us significant improvement by using 2D keypoint instead of the bounding boxes, we managed to achieve better average and final accuracy and the loss is better. We start monitoring the f1-score and we can see that it is also a satisfying.</div>
+
+<div style="text-align: justify">&emsp; However we noticed in the dataset that some of the pedestrian keypoints are not present on certain frame, the model we use didn't manage to detect them, so as a next improvement we wanted to try to add the bbox with the keypoints.</div>
 
 #### 4. Bounding box, occlusion + keypoints + 1s prediction, 1s sequence
 
 - <u>during training :</u>
+
 ![training plot 4](./images/exp4.png)
 
 - <u>discussion :</u> 
 
-<div style="text-align: justify">&emsp;As we can see in the result, this experiment didn't bring improvement, it even perform less good than with just the keypoints. We think that this can be caused by the fact that by bringing the bounding box we thought that the model will be able to have information even when openepifpaf doesn't detect keypoints. However if the detection gives wrong keypoints, it can cause errors in the identification of the pedestrian or just comprehension erro for the model that can't learn to use the bounding box to estimate the position when he doesn't have the keypoints. For this reason we decided to try to use a dynamic detection to identify the pedestrian.</div>
+<div style="text-align: justify">&emsp;As we can see in the result, this experiment didn't bring any improvement, it even perform less good than with just the keypoints. We think that this can be caused by the fact that originally, the purpose of bringing the bounding box was that the model may be able to have informations even when openepifpaf doesn't detect keypoints. However if the detection gives wrong keypoints, it can cause errors in the identification of the pedestrian or just comprehension errors for the model that can't learn to use the bounding box to estimate the position when he doesn't have the keypoints. For this reason we decided to try to use a dynamic detection to identify better which keypoints correspond to which pedestrians.</div>
 
 #### 5. Bounding box, occlusion + keypoints + 1s prediction, 1s sequence + dynamic detection to identify the pedestrian
 
@@ -255,17 +272,17 @@ As we can see on the plot, the model is able to overfit on a little training set
 
 - <u>discussion :</u> 
 
-<div style="text-align: justify">&emsp;As we can see on the result, we didn't get any particular improvement on the loss. However the best checkpoint we have and the mean accuracy and f1 measure seems to be a bit impoved (0.7442 vs 0.7044 for the accuracy and 0.5949 vs 0.5850 for the f1 measure). We can see that the model is able to generalize a bit better. Thus we can conclude that the dynamic detection is a good idea to improve the result of the model.</div>
+<div style="text-align: justify">&emsp;As we can see on the result, we achieved the highest accuracy, and f1-score and the lowest loss with this experiment. Indeed for the best checkpoint we have, the mean accuracy and f1 measure seems to be impoved (0.7545 vs 0.7044 or 0.7442 for the accuracy and 0.6184 vs 0.5850 or 0.5949 for the f1 measure). We can thus see that the model is also able to generalize a bit better. Thus we can conclude that the dynamic detection is a good idea to improve the result of the model.</div>
 
 #### Best Checkpoint Result Comparison :
 
 | Experiment | Loss | Accuracy | F1 score |
 |------------|------|----------|----------|
-|     5      | 0.6488 | 0.7442 | 0.5949   |
+|     5      | 0.4954 | 0.7545 | 0.6184   |
 |     4      | 0.5084 | 0.7044 | 0.5850   |
-|     3      | 0.6931 | 0.5000 | 0.6667   |
-|     2      | 0.6931 | 0.5000 | 0.6667   |
-|     1      | 0.6931 | 0.5000 | 0.6667   |
+|     3      | 0.6488 | 0.7442 | 0.5949   |
+|     2      | 0.5120 | 0.7503 |    -     |
+|     1      | 0.5399 | 0.7255 |    -     |
 
 ## Conclusion
 

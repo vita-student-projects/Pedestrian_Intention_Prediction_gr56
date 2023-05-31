@@ -34,7 +34,7 @@ def parse_args():
     opts = parser.parse_args()
     return opts
 
-def infer_model(args):
+def infer_model(opts,args):
     '''
     Function used to perform inference on the JAAD dataset
     Input : args (config arguments)
@@ -128,7 +128,7 @@ def infer_model(args):
                  'output' : output}
 
     #save the prediction in a json file
-    with open(args.fname, 'w') as fp:
+    with open(join(opts.data_path, "datagen/infer_DB/infer_pred/"+ opts.filename + ".json"), 'w') as fp:
         json.dump(inference, fp)
     
     print('INFO: Prediction saved in {}'.format(join('datagen/infer_DB/infer_pred/'+ opts.filename + ".json")))
@@ -462,7 +462,7 @@ if __name__ == "__main__":
     infer.processing_data_4_PIP(filename=opts.filename)
 
     #Perform the inference
-    infer_model(args)
+    infer_model(opts, args)
 
     #Reconstruct the video for visualization
     infer.reconstrust_video(filename=opts.filename)
