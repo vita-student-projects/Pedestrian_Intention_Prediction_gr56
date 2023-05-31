@@ -168,6 +168,7 @@ class JAAD(object):
         with open(self._checkpoint_path, 'rb') as f:
             dataset = pickle.load(f)
 
+        # Extracting dataset informations
         annotations = dataset['annotations'][vid]['ped_annotations']
         bboxes = annotations[ped][seq]['bbox'].astype(int)
         kps = annotations[ped][seq]['2dkp']
@@ -180,6 +181,8 @@ class JAAD(object):
         out = cv2.VideoWriter(join(self._data_path,'datagen/JAAD_DS/sample_DS.mp4'),
                               cv2.VideoWriter_fourcc(*'DIVX'),15, (1920, 1080))
 
+        # Adding visual informations to the frames and 
+        # recreating a video
         for idx in range(self._fps*self._t_pred-1):
             vidcap.set(cv2.CAP_PROP_POS_FRAMES, frames[idx])
             success, image = vidcap.read()
@@ -217,6 +220,7 @@ class JAAD(object):
         output_kp_seq = []
 
         for frame_nbr, bbox in enumerate(bbox_ped):
+            # Dynamic treshold based on the size of the bounding box
             max_valid_dist = (abs(bbox[0] - bbox[2]) + abs(bbox[1] - bbox[3]))/2
 
             x_mean_bbox = (bbox[0] + bbox[2])/2
@@ -235,7 +239,9 @@ class JAAD(object):
                 if nbr_valid_kp:
                     x_mean_kp /= nbr_valid_kp
                     y_mean_kp /= nbr_valid_kp
-
+                    
+                    # Compares the distance of the mean of the bounding box
+                    # with the mean of the keypoints
                     if np.linalg.norm([x_mean_bbox - x_mean_kp, 
                                        y_mean_bbox - y_mean_kp]) < max_valid_dist:
                         output_kp_seq.append(kp_ped)
@@ -266,6 +272,7 @@ class JAAD(object):
         pred_data = []
         pil_imgs = []
         
+        # Extract all the video images
         while success:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             pil_imgs.append(PIL.Image.fromarray(image))
@@ -281,6 +288,7 @@ class JAAD(object):
             images_batch = images_batch.cuda()
             fields_batch = processor.fields(images_batch)
 
+            # Stack the results and store them
             for i in range(len(fields_batch)):
               predictions = processor.annotations(fields_batch[i])
               
@@ -349,13 +357,14 @@ class JAAD(object):
                     if pred_data is None and compute_kps:
                         pred_data = self._get_2dkp_vid(vid, processor)
 
-                    # Dividing DS in multiple 2s sequences
+                    # Dividing DS in multiple 1s sequences
                     nbr_seq_ped = int((len(tmp_bbox) - forecast_step - 1)/(forecast_step))
                     if nbr_seq_ped >= 1 :
 
                         annotations[ped_annt][new_id] = []
                         nbr_seq_vid += nbr_seq_ped
 
+                        # Creating the sequences
                         for i in range(0, nbr_seq_ped):
 
                             annotation_occ = tmp_occ[i*forecast_step:(i+2)*forecast_step]
@@ -405,6 +414,7 @@ class JAAD(object):
         'ckpt': str
         'seq_per_vid': list (int)
         """
+        # For OpenPifPaf
         if compute_kps:
             net_cpu, _ = openpifpaf.network.factory(checkpoint='resnet101')
             net = net_cpu.cuda()
@@ -413,6 +423,7 @@ class JAAD(object):
 
         video_ids = sorted(self._get_video_ids())
 
+        # Recovering from checkpoint
         if os.path.isfile(self._checkpoint_path) and not regenerate:
             with open(self._checkpoint_path, 'rb') as f:
                 dataset = pickle.load(f)
