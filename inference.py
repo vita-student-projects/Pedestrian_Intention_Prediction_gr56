@@ -225,7 +225,7 @@ class Inference(object):
             print("No pickle file found at " + self._infer_pkl_path)
             return
 
-        forecast_step = int(self._t_pred * self._fps / 2)
+        forecast_step = int(self._t_pred * self._fps)
 
         net_cpu, _ = openpifpaf.network.factory(checkpoint='resnet101')
         net = net_cpu.cuda()
@@ -238,7 +238,7 @@ class Inference(object):
         num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
         
         kp_OPP = self._get_2dkp_vid(filename, processor)
-        nbr_seq_vid = int((len(kp_OPP) - forecast_step)/(forecast_step))
+        nbr_seq_vid = int((len(kp_OPP))/(forecast_step))
 
         data_seq = {'vid_id': filename,'num_seq': nbr_seq_vid,'forecast_step': forecast_step,
                 'nbr_frame_seq': self.nbr_frame_seq, 'total_frame_vid': num_frames, 'width': int(width), 
@@ -247,7 +247,7 @@ class Inference(object):
         for idx_seq in range(0, nbr_seq_vid):
             
             data_seq['seqs'].append({'seq_id' : idx_seq, 'frames' : []})
-            sequence = kp_OPP[idx_seq*forecast_step:(idx_seq+2)*forecast_step]
+            sequence = kp_OPP[idx_seq*forecast_step:(idx_seq+1)*forecast_step]
 
             if np.any(sequence):
                 for idx_frame, frame in enumerate(sequence):
